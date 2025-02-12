@@ -1,4 +1,4 @@
-package com.example.marketmate.presention.theme
+package com.example.marketmate.presentation.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -15,6 +15,7 @@ private val DarkColorScheme = darkColorScheme(
     secondary = PurpleGrey80,
     tertiary = Pink80
 )
+
 
 private val LightColorScheme = lightColorScheme(
     primary = Purple40,
@@ -35,7 +36,6 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun MarketMateTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
@@ -44,7 +44,6 @@ fun MarketMateTheme(
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
