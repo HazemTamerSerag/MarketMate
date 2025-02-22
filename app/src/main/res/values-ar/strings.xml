@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">رفيق السوق </string>
+    <string name="translate">ترجمة</string>
+    <string name="market_mate_logo"> رفيق السوق</string>
+    <string name="feedback">ملاحظات</string>
+    <string name="select_your_preferred_language">اختر لغتك المفضلة</string>
+    <string name="Arabic">العربية</string>
+    <string name="english">الإنجليزية</string>
+    <string name="take_photo">التقط صورة</string>
+    <string name="please_point_the_camera_at_the_product">يرجى توجيه الكاميرا نحو المنتج</string>
+    <string name="market_mate">رفيق السوق</string>
+
+</resources>

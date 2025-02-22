@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.marketmate.R
 import com.example.marketmate.presentation.theme.MarketMateTheme
@@ -51,7 +52,7 @@ fun SplashScreenView() {
     LaunchedEffect(Unit) {
         alpha.animateTo(1f, animationSpec = tween(1500))
         delay(2000)
-        val intent = Intent(context, OnBoardingActivity::class.java).apply {
+        val intent = Intent(context, CameraScreen::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         context.startActivity(intent)
@@ -68,7 +69,7 @@ fun SplashScreenView() {
                 .fillMaxSize(0.8f)
                 .alpha(alpha = alpha.value),
             painter = painterResource(id = R.drawable.marketmatelogo),
-            contentDescription = "Market Mate"
+            contentDescription = stringResource(R.string.market_mate)
         )
     }
 }
