@@ -36,7 +36,9 @@ class CameraScreenViewModel : ViewModel() {
         saveLanguageToPreferences(activity, language)
         updateLocale(activity, language)
         hideSheet()
-        activity.recreate()
+        activity.runOnUiThread {
+            activity.recreate()
+        }
     }
 
     private fun saveLanguageToPreferences(context: Context, language: String) {
@@ -51,5 +53,10 @@ class CameraScreenViewModel : ViewModel() {
         val config = context.resources.configuration
         config.setLocale(locale)
         context.resources.updateConfiguration(config, context.resources.displayMetrics)
+    }
+
+    fun getCurrentLanguage(context: Context): String {
+        val sharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        return sharedPreferences.getString("language", "en") ?: "en"
     }
 }

@@ -34,8 +34,10 @@
             android:exported="true"
             android:theme="@style/Theme.MarketMate">
         </activity>
-        <activity android:name=".presentation.ui.CameraScreen"
+        <activity
+            android:name=".presentation.ui.CameraScreen"
             android:exported="true"
+            android:configChanges="locale|layoutDirection"
             android:theme="@style/Theme.MarketMate">
         </activity>
 

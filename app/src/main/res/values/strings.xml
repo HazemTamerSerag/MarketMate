@@ -9,4 +9,8 @@
     <string name="take_photo">Take photo</string>
     <string name="please_point_the_camera_at_the_product">Please point the camera at the product</string>
     <string name="market_mate">Market Mate</string>
+    <string name="quality_analysis_in_progress">Quality analysis in progress</string>
+    <string name="excellent_quality_confirmed">Excellent quality confirmed</string>
+    <string name="great_choice">Great choice</string>
+    <string name="low_quality_product">Low quality product</string>
 </resources>
