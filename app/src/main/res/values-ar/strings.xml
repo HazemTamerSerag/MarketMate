@@ -10,5 +10,16 @@
     <string name="take_photo">التقط صورة</string>
     <string name="please_point_the_camera_at_the_product">يرجى توجيه الكاميرا نحو المنتج</string>
     <string name="market_mate">رفيق السوق</string>
-
+    <string name="quality_analysis_in_progress">جارٍ تحليل الجودة</string>
+    <string name="excellent_quality_confirmed">تم تأكيد الجودة الممتازة</string>
+    <string name="great_choice">اختيار رائع</string>
+    <string name="low_quality_product">منتج منخفض الجودة</string>
+    <string name="please_select_better">يرجى اختيار منتج أفضل</string>
+    <string name="can_you_tell_me_the_feedback_about_the_service">هل يمكنك إخباري بملاحظاتك حول الخدمة؟</string>
+    <string name="you_can_talk_now">يمكنك التحدث الآن</string>
+    <string name="it_has_been_saved_successfully">تم الحفظ بنجاح</string>
+    <string name="thanks_for_your_feedback">شكرًا على ملاحظاتك</string>
+    <string name="close">إغلاق</string>
+    <string name="feedback_icon">أيقونة الملاحظات</string>
+    <string name="success_icon">أيقونة النجاح</string>
 </resources>

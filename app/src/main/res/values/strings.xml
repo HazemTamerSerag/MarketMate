@@ -13,4 +13,12 @@
     <string name="excellent_quality_confirmed">Excellent quality confirmed</string>
     <string name="great_choice">Great choice</string>
     <string name="low_quality_product">Low quality product</string>
+    <string name="please_select_better">Please select better</string>
+    <string name="can_you_tell_me_the_feedback_about_the_service">Can you tell me the feedback about the service?</string>
+    <string name="you_can_talk_now">You can talk now</string>
+    <string name="it_has_been_saved_successfully">It has been saved successfully</string>
+    <string name="thanks_for_your_feedback">Thanks for your feedback</string>
+    <string name="close">Close</string>
+    <string name="feedback_icon">Feedback Icon</string>
+    <string name="success_icon">Success Icon</string>
 </resources>
