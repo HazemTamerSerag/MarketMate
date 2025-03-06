@@ -22,7 +22,6 @@ fun RotatingImageLoader() {
             repeatMode = RepeatMode.Restart
         )
     )
-
     Image(
         painter = painterResource(id = R.drawable.loading),
         contentDescription = "Rotating Image Loader",

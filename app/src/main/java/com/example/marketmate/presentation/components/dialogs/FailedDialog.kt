@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.sp
 import com.example.marketmate.R
 
 @Composable
-fun FailedDialog(onDismiss: () -> Unit) {
+fun FailedDialog() {
     Box(
         modifier = Modifier
             .fillMaxSize()

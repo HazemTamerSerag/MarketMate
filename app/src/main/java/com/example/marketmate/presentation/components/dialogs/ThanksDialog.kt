@@ -28,7 +28,6 @@ import androidx.compose.ui.window.Dialog
 import com.example.marketmate.R
 import com.example.marketmate.presentation.theme.PrimaryNormal
 
-
 @Composable
 fun ThanksDialog(
     onDismiss: () -> Unit

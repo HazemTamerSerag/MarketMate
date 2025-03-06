@@ -30,8 +30,7 @@ import com.example.marketmate.presentation.theme.PrimaryNormal
 
 @Composable
 fun FeedbackDialog(
-    onDismiss: () -> Unit,
-    onSend: () -> Unit
+    onDismiss: () -> Unit
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Box(

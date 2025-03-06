@@ -21,4 +21,13 @@
     <string name="close">Close</string>
     <string name="feedback_icon">Feedback Icon</string>
     <string name="success_icon">Success Icon</string>
+    <string name="onboarding_title_1">Welcome to MarketMate</string>
+    <string name="onboarding_desc_1">Your smart shopping assistant</string>
+    <string name="onboarding_title_2">Quality Check</string>
+    <string name="onboarding_desc_2">Instantly analyze product quality with AI</string>
+    <string name="onboarding_title_3">Ready to Go</string>
+    <string name="onboarding_desc_3">Start shopping smarter today</string>
+    <string name="previous">Previous</string>
+    <string name="next">Next</string>
+    <string name="get_started">Get Started</string>
 </resources>

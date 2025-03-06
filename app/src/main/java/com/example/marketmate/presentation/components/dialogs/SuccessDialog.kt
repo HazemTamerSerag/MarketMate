@@ -20,7 +20,7 @@ import com.example.marketmate.R
 import com.example.marketmate.presentation.theme.SecondNormalActive
 
 @Composable
-fun SuccessDialog(onDismiss: () -> Unit) {
+fun SuccessDialog() {
     Box(
         modifier = Modifier
             .fillMaxSize()
