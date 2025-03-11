@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">رفيق السوق </string>
+    <string name="app_name">رفيق السوق</string>
     <string name="translate">ترجمة</string>
-    <string name="market_mate_logo"> رفيق السوق</string>
+    <string name="market_mate_logo">شعار رفيق السوق</string>
     <string name="feedback">ملاحظات</string>
     <string name="select_your_preferred_language">اختر لغتك المفضلة</string>
     <string name="Arabic">العربية</string>
@@ -13,13 +12,37 @@
     <string name="quality_analysis_in_progress">جارٍ تحليل الجودة</string>
     <string name="excellent_quality_confirmed">تم تأكيد الجودة الممتازة</string>
     <string name="great_choice">اختيار رائع</string>
-    <string name="low_quality_product">منتج منخفض الجودة</string>
+    <string name="low_quality_product">منتج ذو جودة منخفضة</string>
     <string name="please_select_better">يرجى اختيار منتج أفضل</string>
     <string name="can_you_tell_me_the_feedback_about_the_service">هل يمكنك إخباري بملاحظاتك حول الخدمة؟</string>
     <string name="you_can_talk_now">يمكنك التحدث الآن</string>
     <string name="it_has_been_saved_successfully">تم الحفظ بنجاح</string>
-    <string name="thanks_for_your_feedback">شكرًا على ملاحظاتك</string>
+    <string name="thanks_for_your_feedback">شكرًا لملاحظاتك</string>
     <string name="close">إغلاق</string>
     <string name="feedback_icon">أيقونة الملاحظات</string>
     <string name="success_icon">أيقونة النجاح</string>
+    <string name="onboarding_title_1">مرحبًا بك في رفيق السوق</string>
+    <string name="onboarding_desc_1">مساعدك الذكي للتسوق</string>
+    <string name="onboarding_title_2">فحص الجودة</string>
+    <string name="onboarding_desc_2">تحليل فوري لجودة المنتجات باستخدام الذكاء الاصطناعي</string>
+    <string name="onboarding_title_3">جاهز للانطلاق</string>
+    <string name="onboarding_desc_3">ابدأ التسوق بذكاء اليوم</string>
+    <string name="previous">السابق</string>
+    <string name="next">التالي</string>
+    <string name="get_started">ابدأ الآن</string>
+    <string name="onboarding_background">خلفية التمهيد</string>
+    <string name="mute">كتم الصوت</string>
+    <string name="welcome_to">مرحبًا بك في</string>
+    <string name="market_mate_assistant_robot">روبوت مساعد رفيق السوق</string>
+    <string name="title1Onbo">مساعدك الذكي للتسوق، مما يسهل على المستخدمين المكفوفين التحقق من جودة الفواكه والخضروات بشكل مستقل من خلال مسح الكاميرا البسيط</string>
+    <string name="skip">تخطي</string>
+    <string name="hand_holding_phone">يد تحمل هاتفًا</string>
+    <string name="point">وجّه،</string>
+    <string name="scan">امسح،</string>
+    <string name="listen">استمع</string>
+    <string name="title2Onborad2">فقط وجه الكاميرا إلى أي منتج، وسيقوم رفيق السوق بتحليله وتقديم ملاحظات صوتية فورية حول النضارة والجودة.</string>
+    <string name="ai_glasses">نظارات الذكاء الاصطناعي</string>
+    <string name="effortless">بلا مجهود</string>
+    <string name="guidance">إرشاد</string>
+    <string name="title3Onboard3">مع تعليمات صوتية واضحة وتصفح سهل للتطبيق، لم يكن التسوق للحصول على أفضل المنتجات بهذه السهولة من قبل</string>
 </resources>
