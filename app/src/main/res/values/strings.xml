@@ -30,4 +30,19 @@
     <string name="previous">Previous</string>
     <string name="next">Next</string>
     <string name="get_started">Get Started</string>
+    <string name="onboarding_background">Onboarding Background</string>
+    <string name="mute">Mute</string>
+    <string name="welcome_to">Welcome To</string>
+    <string name="market_mate_assistant_robot">Market Mate Assistant Robot</string>
+    <string name="title1Onbo">Your AI-powered shopping assistant, making it easy for visually impaired users to independently check the quality of fruits and vegetables with a simple camera scan</string>
+    <string name="skip">skip</string>
+    <string name="hand_holding_phone">Hand holding phone</string>
+    <string name="point">Point,</string>
+    <string name="scan">Scan,</string>
+    <string name="listen">Listen</string>
+    <string name="title2Onborad2">Just point your camera at any product, and Market Mate will analyze it, delivering instant audio feedback on freshness and quality.</string>
+    <string name="ai_glasses">AI Glasses</string>
+    <string name="effortless">Effortless</string>
+    <string name="guidance">Guidance</string>
+    <string name="title3Onboard3">With clear audio instructions and easy app navigation, shopping for the best produce has never been this accessible</string>
 </resources>

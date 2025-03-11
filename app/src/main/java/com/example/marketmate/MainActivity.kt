@@ -9,12 +9,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import com.example.marketmate.data.LanguageUtils
 import com.example.marketmate.presentation.navigation.AppNavigation
-import com.example.marketmate.presentation.screen.MarketMateWelcomeScreen
-import com.example.marketmate.presentation.screen.MarketMateWelcomeScreen2
-import com.example.marketmate.presentation.screen.MarketMateWelcomeScreen3
-import com.example.marketmate.presentation.screen.OnboardingPage
-import com.example.marketmate.presentation.screen.SplashScreen
 import com.example.marketmate.presentation.theme.MarketMateTheme
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,10 +18,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         LanguageUtils.applySavedLanguage(this)
         setContent {
-//            MarketMateTheme {
+            MarketMateTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { _ ->
-                    MarketMateWelcomeScreen3()
-//                }
+                    AppNavigation()
+                }
             }
         }
     }

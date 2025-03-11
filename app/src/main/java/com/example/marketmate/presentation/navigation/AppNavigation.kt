@@ -6,7 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.marketmate.presentation.screen.CameraScreen
-import com.example.marketmate.presentation.screen.OnboardingScreen
+import com.example.marketmate.presentation.screen.OnBoardingScreen
 import com.example.marketmate.presentation.screen.SplashScreen
 
 @Composable
@@ -36,13 +36,8 @@ fun AppNavigation(
         }
 
         composable(route = Screen.Onboarding.route) {
-            OnboardingScreen(
-                onFinish = {
-                    navController.navigate(Screen.Camera.route) {
-                        popUpTo(Screen.Onboarding.route) { inclusive = true }
-                        launchSingleTop = true
-                    }
-                }
+            OnBoardingScreen(
+                navController = navController
             )
         }
 

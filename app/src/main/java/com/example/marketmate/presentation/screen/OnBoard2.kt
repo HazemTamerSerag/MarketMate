@@ -1,13 +1,16 @@
 package com.example.marketmate.presentation.screen
 
+import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,135 +21,235 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.marketmate.R
+import com.example.marketmate.presentation.theme.PrimaryDarker
+import com.example.marketmate.presentation.theme.PrimaryNormal
+import com.example.marketmate.presentation.theme.SecondLightActive
+import java.util.Locale
 
 @Composable
-fun MarketMateWelcomeScreen2(
+fun OnBoard2(
     onNextClick: () -> Unit = {},
     onSkipClick: () -> Unit = {}
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.backgroundonboarding2),
-            contentDescription = "Onboarding Background",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop // Ensures the image covers the entire Box
-        )
-        // Skip Button
-        TextButton(
-            onClick = onSkipClick,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(16.dp)
-                .padding(top = 24.dp)
-        ) {
-            Text(
-                text = "skip",
-                style = TextStyle(
-                    fontSize = 16.sp,
-                    color = Color.DarkGray
-                )
-            )
-        }
+    val context = LocalContext.current
+    val isArabic = LocalContext.current.resources.configuration.locales[0].language == "ar"
 
-        // Mute Button
-        IconButton(
-            onClick = { /* Toggle mute */ },
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(16.dp)
-                .padding(top = 24.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.VolumeOff,
-                contentDescription = "Mute",
-                tint = Color.DarkGray
-            )
-        }
+    var tts by remember { mutableStateOf<TextToSpeech?>(null) }
+    var isMuted by remember { mutableStateOf(false) }
+    val title = stringResource(R.string.title2Onborad2)
+    var spokenText by remember { mutableStateOf("") }
+    var isTtsReady by remember { mutableStateOf(false) }
+    // Initialize TTS
+    LaunchedEffect(Unit) {
+        Log.d("OnBoard2", "Initializing TTS...")
 
-        // Main Content
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Spacer(modifier = Modifier.height(64.dp))
-
-            // Main Content Box
-            Box(
-                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(30.dp)).background(Color(0xBBC4DEE8)).padding(24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.marketmatelogoonboarding),
-                        contentDescription = "Market Mate Logo",
-                        modifier = Modifier.size(65.dp)
-                            .padding(16.dp)
-                    )
+        tts = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                Log.d("OnBoard2", "TTS Initialized successfully.")
+                tts?.language = if (isArabic) Locale("ar") else Locale.US
+                isTtsReady = true
+                if (!isMuted) {
+                    speakText(tts, title) { spoken ->
+                        spokenText = spoken
+                    }
                 }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "Point,\nScan,\nListen",
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF0A2533),
-                        textAlign = TextAlign.Start
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Image(
-                        painter = painterResource(id = R.drawable.handonboarding2),
-                        contentDescription = "Phone Scanning",
-                        modifier = Modifier.size(180.dp)
-                            .align(Alignment.End)
-                    )
-                }
+            } else {
+                Log.e("OnBoard2", "TTS Initialization Failed!")
             }
+        }
+    }
+    CompositionLocalProvider(LocalLayoutDirection provides if (isArabic) LayoutDirection.Rtl else LayoutDirection.Ltr) {
 
-            Spacer(modifier = Modifier.weight(1f))
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.backgroundonboarding2),
+                contentDescription = stringResource(R.string.onboarding_background),
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
 
-
-            // Description Text & Next Button
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()
+            // Skip Button
+            TextButton(
+                onClick = {
+                    tts?.stop()
+                    onSkipClick()
+                },
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(16.dp)
+                    .padding(top = 24.dp)
             ) {
                 Text(
-                    text = "Just point your camera at any product, and Market Mate will analyze it, delivering instant audio feedback on freshness and quality.",
+                    text = stringResource(R.string.skip),
                     style = TextStyle(
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF0A2533),
-                        textAlign = TextAlign.Center
-                    ),
-                    modifier = Modifier.padding(horizontal = 22.dp)
+                        fontSize = 16.sp,
+                        color = Color.Black
+                    )
+                )
+            }
+
+            // Mute Button
+            IconButton(
+                onClick = {
+                    if (!isMuted) {
+                        Log.d("OnBoard2", "Muting TTS.")
+                        tts?.stop()
+                    } else {
+                        Log.d("OnBoard2", "Resuming TTS.")
+                        speakText(tts, title) { spoken ->
+                            spokenText = spoken
+                        }
+                    }
+                    isMuted = !isMuted
+                },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+                    .padding(top = 24.dp)
+            ) {
+                Icon(
+                    imageVector = if (isMuted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
+                    contentDescription = stringResource(R.string.mute),
+                    tint = Color.DarkGray
+                )
+            }
+
+            // Main Content Column
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Spacer(modifier = Modifier.height(140.dp))
+
+                // Large Box with Hand and Phone
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.9f)
+                        .aspectRatio(1f)
+                        .clip(RoundedCornerShape(60.dp))
+                        .background(SecondLightActive)
+                ) {
+
+                    // Hand with phone image
+                    Image(
+                        painter = painterResource(id = R.drawable.handonboarding2),
+                        contentDescription = stringResource(R.string.hand_holding_phone),
+                        modifier = Modifier
+                            .fillMaxWidth(0.5f)
+                            .fillMaxHeight(0.9f)
+                            .align(Alignment.CenterEnd),
+                        contentScale = ContentScale.FillHeight
+                    )
+                    // Text overlay for "Point, Scan, Listen"
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .padding(start = 62.dp, bottom = 36.dp),
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        Text(
+                            text = stringResource(R.string.point),
+                            style = TextStyle(
+                                fontSize = 36.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = PrimaryDarker
+                            )
+                        )
+                        Text(
+                            text = stringResource(R.string.scan),
+                            style = TextStyle(
+                                fontSize = 36.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = PrimaryDarker
+                            )
+                        )
+                        Text(
+                            text = stringResource(R.string.listen),
+                            style = TextStyle(
+                                fontSize = 36.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = PrimaryDarker
+                            )
+                        )
+                    }
+
+                    // Logo overlay in bottom left of box
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(16.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.marketmatelogoonboarding),
+                            contentDescription = stringResource(R.string.market_mate_logo),
+                            modifier = Modifier
+                                .size(65.dp)
+                                .padding(16.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Description Text
+                Text(
+                    text = buildAnnotatedString {
+                        title.split(" ").forEach { word ->
+                            if (spokenText.contains(word)) {
+                                withStyle(style = SpanStyle(color = PrimaryNormal)) {
+                                    append("$word ")
+                                }
+                            } else {
+                                withStyle(style = SpanStyle(color = PrimaryDarker)) {
+                                    append("$word ")
+                                }
+                            }
+                        }
+                    },
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(22.dp)
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(64.dp))
 
                 // Next Button (Arrow)
                 Box(
@@ -154,12 +257,13 @@ fun MarketMateWelcomeScreen2(
                         .size(56.dp)
                         .clip(CircleShape)
                         .background(Color(0xFFEEEEEE))
-                        .clickable { onNextClick() },
+                        .clickable { tts?.stop()
+                            onNextClick() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.ArrowForward,
-                        contentDescription = "Next",
+                        contentDescription = stringResource(R.string.next),
                         tint = Color.DarkGray,
                         modifier = Modifier.size(24.dp)
                     )
@@ -170,4 +274,3 @@ fun MarketMateWelcomeScreen2(
         }
     }
 }
-

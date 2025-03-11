@@ -1,174 +1,239 @@
 package com.example.marketmate.presentation.screen
 
+import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.VolumeOff
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.marketmate.R
-import com.example.marketmate.presentation.theme.PrimaryLight
+import com.example.marketmate.presentation.theme.PrimaryDarker
 import com.example.marketmate.presentation.theme.PrimaryLightActive
+import com.example.marketmate.presentation.theme.PrimaryNormal
+import java.util.Locale
 
 @Composable
-fun MarketMateWelcomeScreen(
+fun OnBoard1(
     onNextClick: () -> Unit = {},
     onSkipClick: () -> Unit = {}
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.backgroundonboarding1),
-            contentDescription = "Onboarding Background",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop // Ensures the image covers the entire Box
-        )
-        // Skip Button
-        TextButton(
-            onClick = onSkipClick,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(16.dp)
-                .padding(top = 24.dp)
-        ) {
-            Text(
-                text = "skip",
-                style = TextStyle(
-                    fontSize = 16.sp,
-                    color = Color.DarkGray
-                )
-            )
+    val context = LocalContext.current
+    val isArabic = LocalContext.current.resources.configuration.locales[0].language == "ar"
+    var tts by remember { mutableStateOf<TextToSpeech?>(null) }
+    var isMuted by remember { mutableStateOf(false) }
+    val title = stringResource(R.string.title1Onbo)
+    var spokenText by remember { mutableStateOf("") }
+    var isTtsReady by remember { mutableStateOf(false) }
+    // Initialize TTS
+    LaunchedEffect(Unit) {
+        Log.d("OnBoard1", "Initializing TTS...")
+
+        tts = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                Log.d("OnBoard1", "TTS Initialized successfully.")
+                tts?.language = if (isArabic) Locale("ar") else Locale.US
+                isTtsReady = true
+                if (!isMuted) {
+                    speakText(tts, title) { spoken ->
+                        spokenText = spoken
+                    }
+                }
+            } else {
+                Log.e("OnBoard1", "TTS Initialization Failed!")
+            }
         }
-
-        // Mute Button
-        IconButton(
-            onClick = { /* Toggle mute */ },
+    }
+    CompositionLocalProvider(LocalLayoutDirection provides if (isArabic) LayoutDirection.Rtl else LayoutDirection.Ltr) {
+        Box(
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(16.dp)
-                .padding(top = 24.dp)
+                .fillMaxSize()
+                .background(Color.White)
         ) {
-            Icon(
-                imageVector = Icons.Default.VolumeOff,
-                contentDescription = "Mute",
-                tint = Color.DarkGray
+            Image(
+                painter = painterResource(id = R.drawable.backgroundonboarding1),
+                contentDescription = stringResource(R.string.onboarding_background),
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
             )
-        }
 
-        // Main Content
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Spacer(modifier = Modifier.height(64.dp))
-
-            // Welcome Title
-            Text(
-                text = "Welcome To",
-                style = TextStyle(
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF0A2533),
-                    textAlign = TextAlign.Center
+            // Skip Button
+            TextButton(
+                onClick = {
+                    tts?.stop()
+                    onSkipClick()
+                },
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(16.dp)
+                    .padding(top = 24.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.skip),
+                    style = TextStyle(
+                        fontSize = 18.sp,
+                        color = Color.Black
+                    )
                 )
-            )
-            BoxWithConstraints(
+            }
+
+            // Mute Button
+            IconButton(
+                onClick = {
+                    if (!isMuted) {
+                        Log.d("OnBoard1", "Muting TTS.")
+                        tts?.stop()
+                    } else {
+                        Log.d("OnBoard1", "Resuming TTS.")
+                        speakText(tts, title) { spoken ->
+                            spokenText = spoken
+                        }
+                    }
+                    isMuted = !isMuted
+                },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+                    .padding(top = 24.dp)
+            ) {
+                Icon(
+                    imageVector = if (isMuted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
+                    contentDescription = stringResource(R.string.mute),
+                    tint = Color.DarkGray
+                )
+            }
+            // Main Content Column
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                val boxWidth = maxWidth * 0.95f
-                // Background Circle
+                Spacer(modifier = Modifier.height(100.dp))
+
+                // Welcome Title
+                Text(
+                    text = stringResource(R.string.welcome_to),
+                    style = TextStyle(
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryDarker,
+                        textAlign = TextAlign.Center
+                    )
+                )
+                // Large Robot in Box
                 Box(
                     modifier = Modifier
-                        .size(boxWidth)
+                        .fillMaxWidth(0.9f)
+                        .aspectRatio(1f)
                         .clip(RoundedCornerShape(60.dp))
                         .background(PrimaryLightActive)
-                        .align(Alignment.TopCenter)
                 ) {
-                    // Logo in bottom left of circle
-                    Row(
+                    Column(
                         modifier = Modifier
-                            .align(Alignment.TopCenter),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text(
-                            text = "Market Mate",
+                            text = stringResource(R.string.market_mate),
                             style = TextStyle(
                                 fontSize = 32.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF0A2533),
+                                color = PrimaryDarker,
                                 textAlign = TextAlign.Center
                             )
                         )
                     }
-                    // Logo in bottom left of circle
-                    Row(
+
+                    // Robot Image completely filling the box
+                    Image(
+                        painter = painterResource(id = R.drawable.robet3x),
+                        contentDescription = stringResource(R.string.market_mate_assistant_robot),
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop // Use Crop to ensure it fills the entire box
+                    )
+                    // Logo overlay in bottom left of box
+                    Box(
                         modifier = Modifier
                             .align(Alignment.BottomStart)
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            .padding(16.dp)
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.marketmatelogoonboarding),
-                            contentDescription = "Market Mate Logo",
-                            modifier = Modifier.size(65.dp)
+                            contentDescription = stringResource(R.string.market_mate_logo),
+                            modifier = Modifier
+                                .size(65.dp)
                                 .padding(16.dp)
                         )
                     }
                 }
-                // Robot Image positioned to overlap the circle
-                Image(
-                    painter = painterResource(id = R.drawable.robet3x),
-                    contentDescription = "Market Mate Assistant Robot",
-                    modifier = Modifier
-                        .width(boxWidth * 1.5f) // Keep it slightly smaller
-                        .height(450.dp) //
-                        .align(Alignment.BottomCenter)// Stretch height for better proportions
-                        .offset(y = -50.dp) // Move upwards to overlap
-                )
-            }
-            Spacer(modifier = Modifier.weight(1f))
 
-            // Description Text & Next Button
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+                Spacer(modifier = Modifier.weight(1f))
+
                 Text(
-                    text = "Your AI-powered shopping assistant, making it easy for visually impaired users to independently check the quality of fruits and vegetables with a simple camera scan!",
-                    style = TextStyle(
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF0A2533),
-                        textAlign = TextAlign.Center
-                    ),
-                    modifier = Modifier.padding(horizontal = 22.dp)
+                    text = buildAnnotatedString {
+                        title.split(" ").forEach { word ->
+                            if (spokenText.contains(word)) {
+                                withStyle(style = SpanStyle(color = PrimaryNormal)) {
+                                    append("$word ")
+                                }
+                            } else {
+                                withStyle(style = SpanStyle(color = PrimaryDarker)) {
+                                    append("$word ")
+                                }
+                            }
+                        }
+                    },
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(22.dp)
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(64.dp))
 
                 // Next Button (Arrow)
                 Box(
@@ -176,25 +241,39 @@ fun MarketMateWelcomeScreen(
                         .size(56.dp)
                         .clip(CircleShape)
                         .background(Color(0xFFEEEEEE))
-                        .clickable { onNextClick() },
+                        .clickable { tts?.stop()
+                            onNextClick() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.ArrowForward,
-                        contentDescription = "Next",
+                        contentDescription = stringResource(R.string.next),
                         tint = Color.DarkGray,
                         modifier = Modifier.size(24.dp)
                     )
                 }
-
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun MarketMateWelcomeScreenPreview() {
-    MarketMateWelcomeScreen()
+// Function to handle TTS
+fun speakText(tts: TextToSpeech?, text: String, onWordSpoken: (String) -> Unit) {
+    tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "tts_id")
+    onWordSpoken("") // Reset spoken words
+    tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+        override fun onStart(utteranceId: String?) {
+            Log.d("TTS", "Speech started")
+        }
+        override fun onDone(utteranceId: String?) {
+            Log.d("TTS", "Speech completed")
+        }
+        override fun onError(utteranceId: String?) {
+            Log.e("TTS", "Speech error")
+        }
+        override fun onRangeStart(utteranceId: String?, start: Int, end: Int, frame: Int) {
+            val spokenPart = text.substring(0, end)
+            onWordSpoken(spokenPart)
+        }
+    })
 }

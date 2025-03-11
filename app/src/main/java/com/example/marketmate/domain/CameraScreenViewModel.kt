@@ -73,7 +73,7 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
     }
     private fun loadModel() {
         try {
-            val assetFileDescriptor = context.assets.openFd("project_graduation.tflite")
+            val assetFileDescriptor = context.assets.openFd("Final.tflite")
             val inputStream = FileInputStream(assetFileDescriptor.fileDescriptor)
             val fileChannel = inputStream.channel
             val startOffset = assetFileDescriptor.startOffset
@@ -90,15 +90,9 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
         viewModelScope.launch {
             try {
                 _bitmaps.value += bitmap
-                _finalAnalysisCount.value++
-                if (_finalAnalysisCount.value >= 5) {
-                    _showFeedbackDialog.value = true
-                    _finalAnalysisCount.value = 0 // Reset counter after triggering dialog
-                }
                 setLoadingDialog(true)
                 // Ensure loading dialog shows for minimum duration
                 val startTime = System.currentTimeMillis()
-
                 // Analyze image and get confidence
                 val confidence = analyzeFruit(bitmap)
                 Log.d("Debug", "Analysis complete. Confidence: $confidence")
@@ -113,10 +107,20 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
                     _showSuccessDialog.value = true
                     delay(RESULT_DURATION)
                     _showSuccessDialog.value = false
+                    _finalAnalysisCount.value++
+                    if (_finalAnalysisCount.value >= 5) {
+                        _showFeedbackDialog.value = true
+                        _finalAnalysisCount.value = 0 // Reset counter after triggering dialog
+                    }
                 } else {
                     _showFailedDialog.value = true
                     delay(RESULT_DURATION)
                     _showFailedDialog.value = false
+                    _finalAnalysisCount.value++
+                    if (_finalAnalysisCount.value >= 5) {
+                        _showFeedbackDialog.value = true
+                        _finalAnalysisCount.value = 0 // Reset counter after triggering dialog
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("Debug", "Error in analysis process: ${e.message}")
@@ -128,7 +132,6 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
             }
         }
     }
-
     // Update the analyzeFruit function to return a confidence value
     private fun analyzeFruit(bitmap: Bitmap): Float {
         return try {
@@ -143,67 +146,75 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
 
             // Resize bitmap
             val resizedBitmap = Bitmap.createScaledBitmap(bitmap, modelInputSize, modelInputSize, true)
+            val outputShape = interpreter!!.getOutputTensor(0).shape()
+            val numClasses = outputShape[1]
 
-            // Process image
+            Log.d("Debug", "Input Shape: ${inputShape.joinToString()}")
+            Log.d("Debug", "Output Shape: ${outputShape.joinToString()}")
+            Log.d("Debug", "Number of classes: $numClasses")
             val inputBuffer = if (interpreter!!.getInputTensor(0).dataType() == org.tensorflow.lite.DataType.UINT8) {
                 convertBitmapToByteBuffer(resizedBitmap, modelInputSize)
             } else {
                 convertBitmapToByteBufferFloat32(resizedBitmap, modelInputSize)
             }
-
-            val outputShape = interpreter!!.getOutputTensor(0).shape()
-            val numClasses = outputShape[1]
+            inputBuffer.rewind()
+            for (i in 0 until 10) {
+                if (inputBuffer.remaining() >= 4) {
+                    val redValue = inputBuffer.getFloat()
+                    Log.d("Debug", "Red Channel [$i]: $redValue")
+                }
+            }
             val outputArray = Array(1) { FloatArray(numClasses) }
-
             interpreter!!.run(inputBuffer, outputArray)
 
-            // Get the confidence value
-            val confidence = outputArray[0].maxOrNull() ?: 0f
-            Log.d("Debug", "Confidence value: $confidence")
+            Log.d("Debug", "Raw Model Output:")
+            outputArray[0].forEachIndexed { index, confidence ->
+                Log.d("Debug", "Class $index: $confidence")
+            }
+            val predictedIndex = outputArray[0].indices.maxByOrNull { outputArray[0][it] } ?: -1
+            val predictedConfidence = outputArray[0][predictedIndex]
+            Log.d("Debug", "Predicted Class Index: $predictedIndex, Confidence: $predictedConfidence")
 
+            // Get the confidence value
+            val probabilities = softmax(outputArray[0])
+            val confidence = probabilities.maxOrNull() ?: 0f
+            Log.d("Debug", "Confidence value (after softmax): $confidence")
             confidence
         } catch (e: Exception) {
             Log.e("Debug", "Error during classification: ${e.message}", e)
             0f
         }
     }
+    private fun softmax(outputArray: FloatArray): FloatArray {
+        val expValues = outputArray.map { Math.exp(it.toDouble()) }
+        val sumExpValues = expValues.sum()
+        return expValues.map { (it / sumExpValues).toFloat() }.toFloatArray()
+    }
 
-    // ✅ **Helper function to convert Bitmap to ByteBuffer (UINT8 Format)**
     private fun convertBitmapToByteBuffer(bitmap: Bitmap, size: Int): ByteBuffer {
-        val byteBuffer = ByteBuffer.allocateDirect(size * size * 3) // UINT8 (1 byte per channel)
+        val byteBuffer = ByteBuffer.allocateDirect(size * size * 3)
         byteBuffer.order(ByteOrder.nativeOrder())
-
         val intValues = IntArray(size * size)
         bitmap.getPixels(intValues, 0, size, 0, 0, size, size)
 
         for (pixel in intValues) {
-            val r = (pixel shr 16) and 0xFF
-            val g = (pixel shr 8) and 0xFF
-            val b = pixel and 0xFF
-
-            byteBuffer.put(r.toByte())
-            byteBuffer.put(g.toByte())
-            byteBuffer.put(b.toByte())
+            byteBuffer.put(((pixel shr 16) and 0xFF).toByte())
+            byteBuffer.put(((pixel shr 8) and 0xFF).toByte())
+            byteBuffer.put((pixel and 0xFF).toByte())
         }
         return byteBuffer
     }
 
-    // ✅ **Alternative: Convert Bitmap to ByteBuffer (FLOAT32 Format)**
     private fun convertBitmapToByteBufferFloat32(bitmap: Bitmap, size: Int): ByteBuffer {
-        val byteBuffer = ByteBuffer.allocateDirect(size * size * 3 * 4) // 4 bytes per float
+        val byteBuffer = ByteBuffer.allocateDirect(size * size * 3 * 4)
         byteBuffer.order(ByteOrder.nativeOrder())
-
         val intValues = IntArray(size * size)
         bitmap.getPixels(intValues, 0, size, 0, 0, size, size)
 
         for (pixel in intValues) {
-            val r = ((pixel shr 16) and 0xFF) / 255.0f
-            val g = ((pixel shr 8) and 0xFF) / 255.0f
-            val b = (pixel and 0xFF) / 255.0f
-
-            byteBuffer.putFloat(r)
-            byteBuffer.putFloat(g)
-            byteBuffer.putFloat(b)
+            byteBuffer.putFloat(((pixel shr 16) and 0xFF) / 255.0f)
+            byteBuffer.putFloat(((pixel shr 8) and 0xFF) / 255.0f)
+            byteBuffer.putFloat((pixel and 0xFF) / 255.0f)
         }
         return byteBuffer
     }
@@ -212,11 +223,9 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
     private fun setLoadingDialog(show: Boolean) {
         _showLoadingDialog.value = show
     }
-
     fun showSheet() {
         _isSheetVisible.value = true
     }
-
     fun hideSheet() {
         _isSheetVisible.value = false
     }
@@ -226,8 +235,6 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
             stopFeedbackRecording()
         }
     }
-
-
     fun setLanguage(language: String, activity: Activity) {
         viewModelScope.launch {
             _selectedLanguage.value = language
@@ -300,7 +307,6 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
             null
         }
     }
-
     // Updated stop recording function
     fun stopFeedbackRecording() {
         audioRecorder?.let { recorder ->
@@ -320,7 +326,6 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
             }
         }
     }
-
     // Updated send to WhatsApp function
     fun sendFeedbackToWhatsApp(context: Context, audioFile: File?) {
         audioFile ?: run {

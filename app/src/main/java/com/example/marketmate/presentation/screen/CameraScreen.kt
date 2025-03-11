@@ -1,6 +1,7 @@
 package com.example.marketmate.presentation.screen
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.ComponentActivity
@@ -88,6 +89,7 @@ fun CameraScreen() {
         val viewModel = viewModel<CameraScreenViewModel>()
         val isSheetVisible by viewModel.isSheetVisible.collectAsState()
         // Request camera permission
+
         LaunchedEffect(Unit) {
             if (!hasCameraPermission(context)) {
                 requestCameraPermission(context)
@@ -110,15 +112,22 @@ private fun hasCameraPermission(context: Context) = ContextCompat.checkSelfPermi
 ) == PackageManager.PERMISSION_GRANTED
 
 private fun requestCameraPermission(context: Context) {
+    val permissions = arrayOf(
+        Manifest.permission.CAMERA,
+        Manifest.permission.RECORD_AUDIO
+    )
+    if (permissions.all { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }) {
+        // All permissions are granted
+        return
+    }
     if (context is ComponentActivity) {
         ActivityCompat.requestPermissions(
-            context,
-            arrayOf(Manifest.permission.CAMERA),
-            0
+            context as Activity,
+            permissions,
+            200
         )
     }
 }
-
 
 @Composable
 fun UpperPartPreview(

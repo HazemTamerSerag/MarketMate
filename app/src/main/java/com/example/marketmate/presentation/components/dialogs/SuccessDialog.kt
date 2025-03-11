@@ -12,42 +12,54 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.example.marketmate.R
 import com.example.marketmate.presentation.theme.SecondNormalActive
 
 @Composable
 fun SuccessDialog() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.5f)),
-        contentAlignment = Alignment.Center
-    ) {
+    Dialog(onDismissRequest = { /* Prevent dismissal */ }) {
         Box(
             modifier = Modifier
-                .background(Color.White, RoundedCornerShape(16.dp))
-                .padding(34.dp)
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    awaitPointerEventScope {
+                        while (true) {
+                            val event = awaitPointerEvent(PointerEventPass.Initial)
+                            event.changes.forEach { it.consume() } // Block all touch events
+                        }
+                    }
+                },
+            contentAlignment = Alignment.Center
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            Box(
+                modifier = Modifier
+                    .background(Color.White, RoundedCornerShape(16.dp))
+                    .padding(34.dp)
             ) {
-                Text(
-                    text = stringResource(R.string.excellent_quality_confirmed),
-                    color = SecondNormalActive,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Light
-                )
-                Text(
-                    text = stringResource(R.string.great_choice),
-                    fontSize = 16.sp,
-                    color = Color.Gray,
-                    fontWeight = FontWeight.Light
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.excellent_quality_confirmed),
+                        color = SecondNormalActive,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Light
+                    )
+                    Text(
+                        text = stringResource(R.string.great_choice),
+                        fontSize = 16.sp,
+                        color = Color.Gray,
+                        fontWeight = FontWeight.Light
+                    )
+                }
             }
         }
     }
