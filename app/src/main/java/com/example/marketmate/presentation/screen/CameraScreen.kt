@@ -31,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -139,125 +140,125 @@ fun UpperPartPreview(
     var showFeedbackSuccessDialog by remember { mutableStateOf(false) }
     var isRecording by remember { mutableStateOf(false) }
     var job: Job? by remember { mutableStateOf(null) }
+        Row(
+            modifier = Modifier.fillMaxWidth()
+                .background(Color.Black),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Language Button
+            IconButton(onClick = { viewModel.showSheet() }) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        modifier = Modifier.size(16.dp),
+                        imageVector = Icons.Default.Translate,
+                        contentDescription = stringResource(R.string.translate),
+                        tint = Color.White
+                    )
+                }
+            }
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        // Language Button
-        IconButton(onClick = { viewModel.showSheet() }) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
+            // Logo
+            Icon(
+                modifier = Modifier
+                    .size(56.dp)
+                    .align(alignment = Alignment.CenterVertically),
+                painter = painterResource(R.drawable.marketmatelogo3x),
+                contentDescription = stringResource(R.string.market_mate_logo),
+                tint = Color.White
+            )
+
+            // Feedback Button
+            IconButton(onClick = {
+                if (checkAndRequestFeedbackPermissions(context)) {
+                    showFeedbackRequestDialog = true
+                    isRecording = true
+
+                    job = coroutineScope.launch {
+                        // Start recording
+                        val audioFile = viewModel.startFeedbackRecording(context)
+
+                        // Record for 5 seconds
+                        delay(5000)
+
+                        // Stop recording
+                        viewModel.stopFeedbackRecording()
+                        isRecording = false
+                        showFeedbackRequestDialog = false
+
+                        // Send to WhatsApp
+                        viewModel.sendFeedbackToWhatsApp(context, audioFile)
+
+                        // Show success dialog
+                        showFeedbackSuccessDialog = true
+                        delay(3000)
+                        showFeedbackSuccessDialog = false
+                    }
+                }
+            }) {
                 Icon(
                     modifier = Modifier.size(16.dp),
-                    imageVector = Icons.Default.Translate,
-                    contentDescription = stringResource(R.string.translate),
+                    imageVector = Icons.Default.Feedback,
+                    contentDescription = stringResource(R.string.feedback),
                     tint = Color.White
                 )
             }
         }
 
-        // Logo
-        Icon(
-            modifier = Modifier
-                .size(56.dp)
-                .align(alignment = Alignment.CenterVertically),
-            painter = painterResource(R.drawable.marketmatelogo3x),
-            contentDescription = stringResource(R.string.market_mate_logo),
-            tint = Color.White
-        )
-
-        // Feedback Button
-        IconButton(onClick = {
-            if (checkAndRequestFeedbackPermissions(context)) {
-                showFeedbackRequestDialog = true
-                isRecording = true
-
-                job = coroutineScope.launch {
-                    // Start recording
-                    val audioFile = viewModel.startFeedbackRecording(context)
-
-                    // Record for 5 seconds
-                    delay(5000)
-
-                    // Stop recording
-                    viewModel.stopFeedbackRecording()
-                    isRecording = false
+        if (showFeedbackRequestDialog) {
+            FeedbackDialog(
+                onDismiss = {
                     showFeedbackRequestDialog = false
-
-                    // Send to WhatsApp
-                    viewModel.sendFeedbackToWhatsApp(context, audioFile)
-
-                    // Show success dialog
-                    showFeedbackSuccessDialog = true
-                    delay(3000)
-                    showFeedbackSuccessDialog = false
+                    if (isRecording) {
+                        viewModel.stopFeedbackRecording()
+                        isRecording = false
+                    }
+                    job?.cancel() // Cancels WhatsApp sending if dismissed
                 }
-            }
-        }) {
-            Icon(
-                modifier = Modifier.size(16.dp),
-                imageVector = Icons.Default.Feedback,
-                contentDescription = stringResource(R.string.feedback),
-                tint = Color.White
             )
         }
-    }
 
-    if (showFeedbackRequestDialog) {
-        FeedbackDialog(
-            onDismiss = {
-                showFeedbackRequestDialog = false
-                if (isRecording) {
-                    viewModel.stopFeedbackRecording()
-                    isRecording = false
-                }
-                job?.cancel() // Cancels WhatsApp sending if dismissed
-            }
-        )
-    }
-
-    // Feedback Success Dialog
-    if (showFeedbackSuccessDialog) {
-        ThanksDialog(onDismiss = {
-            showFeedbackSuccessDialog = false
-        })
-    }
+        // Feedback Success Dialog
+        if (showFeedbackSuccessDialog) {
+            ThanksDialog(onDismiss = {
+                showFeedbackSuccessDialog = false
+            })
+        }
 }
 
 @Composable
 fun CameraViewfinderOverlay() {
-    Canvas(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        val innerBoxWidth = 335.dp.toPx()
-        val innerBoxHeight = 335.dp.toPx()
-        val innerBoxLeft = (size.width - innerBoxWidth) / 2
-        val innerBoxTop = (size.height - innerBoxHeight) / 2
+        Canvas(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            val innerBoxWidth = 335.dp.toPx()
+            val innerBoxHeight = 335.dp.toPx()
+            val innerBoxLeft = (size.width - innerBoxWidth) / 2
+            val innerBoxTop = (size.height - innerBoxHeight) / 2
 
-        // Outer area overlay
-        drawRect(
-            color = Color.Black.copy(alpha = 0.5f),
-            size = size
-        )
+            // Outer area overlay
+            drawRect(
+                color = Color.Black.copy(alpha = 0.5f),
+                size = size
+            )
 
-        // Clear inner area
-        drawRect(
-            color = Color.Transparent,
-            topLeft = Offset(innerBoxLeft, innerBoxTop),
-            size = Size(innerBoxWidth, innerBoxHeight),
-            blendMode = BlendMode.Clear
-        )
+            // Clear inner area
+            drawRect(
+                color = Color.Transparent,
+                topLeft = Offset(innerBoxLeft, innerBoxTop),
+                size = Size(innerBoxWidth, innerBoxHeight),
+                blendMode = BlendMode.Clear
+            )
 
-        // Inner area light overlay
-        drawRect(
-            color = Color.White.copy(alpha = 0.0f),
-            topLeft = Offset(innerBoxLeft, innerBoxTop),
-            size = Size(innerBoxWidth, innerBoxHeight)
-        )
-    }
+            // Inner area light overlay
+            drawRect(
+                color = Color.White.copy(alpha = 0.0f),
+                topLeft = Offset(innerBoxLeft, innerBoxTop),
+                size = Size(innerBoxWidth, innerBoxHeight)
+            )
+        }
 }
 
 @Composable
@@ -305,115 +306,115 @@ fun MainScreenContent(
     onLanguageSelected: (String) -> Unit
 ) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
     val showFeedbackDialog by viewModel.showFeedbackDialog.collectAsState()
     val showLoadingDialog by viewModel.showLoadingDialog.collectAsState()
     val showSuccessDialog by viewModel.showSuccessDialog.collectAsState()
     val showFailedDialog by viewModel.showFailedDialog.collectAsState()
     val analysisResult by viewModel.analysisResult.collectAsState()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { UpperPartPreview(viewModel) },
-                modifier = Modifier.background(Color.Black)
-            )
-        }
-    ) { padding ->
-        Box(modifier = Modifier.fillMaxSize()) {
-            CameraPreview(
-                controller = controller,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .border(6.dp, Color.Black, RoundedCornerShape(8.dp))
-            )
-            CameraViewfinderOverlay()
-            Box(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(335.dp, 335.dp)
-            ) {
-                ViewfinderCorners()
-            }
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .background(Color.Black)
-                    .padding(46.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.please_point_the_camera_at_the_product),
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { UpperPartPreview(viewModel) },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Black
+                    )
                 )
             }
-
-            // Loading Dialog
-            if (showLoadingDialog) {
-                LoadingDialog()
-            }
-
-            // Success Dialog
-            if (showSuccessDialog) {
-                SuccessDialog(
-                    // Auto-dismisses after delay
-                )
-            }
-
-            // Failed Dialog
-            if (showFailedDialog) {
-                FailedDialog(
-                    // Auto-dismisses after delay
-                )
-            }
-
-            // Display analysis result message if available
-            analysisResult?.let { result ->
-                Text(
-                    text = result.message,
-                    color = when (result.type) {
-                        AnalysisResultType.SUITABLE -> Color.Green
-                        AnalysisResultType.NOT_SUITABLE -> Color.Red
-                        AnalysisResultType.ERROR -> Color.Gray
-                    },
+        ) { padding ->
+            Box(modifier = Modifier.fillMaxSize()) {
+                CameraPreview(
+                    controller = controller,
                     modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(16.dp)
-                        .background(Color.White.copy(alpha = 0.7f))
-                        .padding(8.dp)
+                        .fillMaxSize()
+                        .border(6.dp, Color.Black, RoundedCornerShape(8.dp))
                 )
-            }
+                CameraViewfinderOverlay()
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(335.dp, 335.dp)
+                ) {
+                    ViewfinderCorners()
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .background(Color.Black)
+                        .padding(46.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.please_point_the_camera_at_the_product),
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
 
-            // Camera capture button
-            Box(
-                modifier = Modifier
-                    .offset(y = (-85).dp)
-                    .align(Alignment.BottomCenter)
-            ) {
-                CaptureButton(
-                    onCapture = {
-                        takePhoto(
-                            context = context,
-                            controller = controller,
-                            onPhotoTaken = { bitmap ->
-                                viewModel.onTakePhoto(bitmap)
-                            }
-                        )
-            })
-            }
-            if (showFeedbackDialog) {
-                FeedbackDialog(
-                    onDismiss = {
-                        viewModel.dismissFeedbackDialog()
-                    })
+                // Loading Dialog
+                if (showLoadingDialog) {
+                    LoadingDialog()
+                }
+
+                // Success Dialog
+                if (showSuccessDialog) {
+                    SuccessDialog(
+                        // Auto-dismisses after delay
+                    )
+                }
+
+                // Failed Dialog
+                if (showFailedDialog) {
+                    FailedDialog(
+                        // Auto-dismisses after delay
+                    )
+                }
+
+                // Display analysis result message if available
+                analysisResult?.let { result ->
+                    Text(
+                        text = result.message,
+                        color = when (result.type) {
+                            AnalysisResultType.SUITABLE -> Color.Green
+                            AnalysisResultType.NOT_SUITABLE -> Color.Red
+                            AnalysisResultType.ERROR -> Color.Gray
+                        },
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(16.dp)
+                            .background(Color.White.copy(alpha = 0.7f))
+                            .padding(8.dp)
+                    )
+                }
+
+                // Camera capture button
+                Box(
+                    modifier = Modifier
+                        .offset(y = (-85).dp)
+                        .align(Alignment.BottomCenter)
+                ) {
+                    CaptureButton(
+                        onCapture = {
+                            takePhoto(
+                                context = context,
+                                controller = controller,
+                                onPhotoTaken = { bitmap ->
+                                    viewModel.onTakePhoto(bitmap)
+                                }
+                            )
+                        })
+                }
+                if (showFeedbackDialog) {
+                    FeedbackDialog(
+                        onDismiss = {
+                            viewModel.dismissFeedbackDialog()
+                        })
+                }
             }
         }
-        }
-
         // Language Selector Sheet
         if (isSheetVisible) {
             LanguageSelector(
@@ -421,4 +422,5 @@ fun MainScreenContent(
                 onLanguageSelected = onLanguageSelected
             )
         }
-    }
+
+}
