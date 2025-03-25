@@ -47,6 +47,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,8 +55,10 @@ import com.example.marketmate.R
 import com.example.marketmate.presentation.theme.PrimaryDarker
 import com.example.marketmate.presentation.theme.PrimaryLightActive
 import com.example.marketmate.presentation.theme.PrimaryNormal
+import com.example.marketmate.presentation.theme.andadaProFontFamily
 import java.util.Locale
 
+@Preview
 @Composable
 fun OnBoard1(
     onNextClick: () -> Unit = {},
@@ -78,9 +81,9 @@ fun OnBoard1(
                 tts?.language = if (isArabic) Locale("ar") else Locale.US
                 isTtsReady = true
                 if (!isMuted) {
-                    speakText(tts, title) { spoken ->
+                    speakText(tts, title, onNextClick = onNextClick, onWordSpoken = { spoken ->
                         spokenText = spoken
-                    }
+                    })
                 }
             } else {
                 Log.e("OnBoard1", "TTS Initialization Failed!")
@@ -128,9 +131,11 @@ fun OnBoard1(
                         tts?.stop()
                     } else {
                         Log.d("OnBoard1", "Resuming TTS.")
-                        speakText(tts, title) { spoken ->
-                            spokenText = spoken
-                        }
+                        speakText(
+                            tts, title, onWordSpoken = { spoken ->
+                                spokenText = spoken
+                            }, onNextClick = onNextClick
+                        )
                     }
                     isMuted = !isMuted
                 },
@@ -140,7 +145,9 @@ fun OnBoard1(
                     .padding(top = 24.dp)
             ) {
                 Icon(
-                    imageVector = if (isMuted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
+                    painter = if (isMuted) painterResource(R.drawable.sound_on) else painterResource(
+                        R.drawable.ic_sound_on
+                    ),
                     contentDescription = stringResource(R.string.mute),
                     tint = Color.DarkGray
                 )
@@ -149,7 +156,7 @@ fun OnBoard1(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(vertical = 24.dp, horizontal = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Spacer(modifier = Modifier.height(100.dp))
@@ -158,16 +165,17 @@ fun OnBoard1(
                 Text(
                     text = stringResource(R.string.welcome_to),
                     style = TextStyle(
-                        fontSize = 32.sp,
+                        fontSize = 40.sp,
                         fontWeight = FontWeight.Bold,
                         color = PrimaryDarker,
+                        fontFamily = andadaProFontFamily,
                         textAlign = TextAlign.Center
                     )
                 )
                 // Large Robot in Box
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(0.9f)
+                        .fillMaxWidth()
                         .aspectRatio(1f)
                         .clip(RoundedCornerShape(60.dp))
                         .background(PrimaryLightActive)
@@ -180,9 +188,10 @@ fun OnBoard1(
                         Text(
                             text = stringResource(R.string.market_mate),
                             style = TextStyle(
-                                fontSize = 32.sp,
+                                fontSize = 40.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = PrimaryDarker,
+                                fontFamily = andadaProFontFamily,
                                 textAlign = TextAlign.Center
                             )
                         )
@@ -241,8 +250,10 @@ fun OnBoard1(
                         .size(56.dp)
                         .clip(CircleShape)
                         .background(Color(0xFFEEEEEE))
-                        .clickable { tts?.stop()
-                            onNextClick() },
+                        .clickable {
+                            tts?.stop()
+                            onNextClick()
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -257,20 +268,30 @@ fun OnBoard1(
         }
     }
 }
+
 // Function to handle TTS
-fun speakText(tts: TextToSpeech?, text: String, onWordSpoken: (String) -> Unit) {
+fun speakText(
+    tts: TextToSpeech?,
+    text: String,
+    onWordSpoken: (String) -> Unit,
+    onNextClick: () -> Unit
+) {
     tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "tts_id")
     onWordSpoken("") // Reset spoken words
     tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
         override fun onStart(utteranceId: String?) {
             Log.d("TTS", "Speech started")
         }
+
         override fun onDone(utteranceId: String?) {
+            onNextClick()
             Log.d("TTS", "Speech completed")
         }
+
         override fun onError(utteranceId: String?) {
             Log.e("TTS", "Speech error")
         }
+
         override fun onRangeStart(utteranceId: String?, start: Int, end: Int, frame: Int) {
             val spokenPart = text.substring(0, end)
             onWordSpoken(spokenPart)

@@ -80,9 +80,13 @@ fun OnBoard2(
                 tts?.language = if (isArabic) Locale("ar") else Locale.US
                 isTtsReady = true
                 if (!isMuted) {
-                    speakText(tts, title) { spoken ->
-                        spokenText = spoken
-                    }
+                    speakText(
+                        tts, title,
+                        onWordSpoken = { spoken ->
+                            spokenText = spoken
+                        },
+                        onNextClick = onNextClick
+                    )
                 }
             } else {
                 Log.e("OnBoard2", "TTS Initialization Failed!")
@@ -131,9 +135,13 @@ fun OnBoard2(
                         tts?.stop()
                     } else {
                         Log.d("OnBoard2", "Resuming TTS.")
-                        speakText(tts, title) { spoken ->
-                            spokenText = spoken
-                        }
+                        speakText(
+                            tts, title,
+                            onWordSpoken = { spoken ->
+                                spokenText = spoken
+                            },
+                            onNextClick = onNextClick
+                        )
                     }
                     isMuted = !isMuted
                 },
@@ -153,7 +161,8 @@ fun OnBoard2(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(horizontal = 16.dp)
+                    .padding(vertical = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Spacer(modifier = Modifier.height(140.dp))
@@ -257,8 +266,10 @@ fun OnBoard2(
                         .size(56.dp)
                         .clip(CircleShape)
                         .background(Color(0xFFEEEEEE))
-                        .clickable { tts?.stop()
-                            onNextClick() },
+                        .clickable {
+                            tts?.stop()
+                            onNextClick()
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(

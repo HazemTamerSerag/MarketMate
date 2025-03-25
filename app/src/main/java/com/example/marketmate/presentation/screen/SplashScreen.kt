@@ -53,7 +53,7 @@ fun SplashScreen(
             modifier = Modifier
                 .fillMaxSize(0.8f)
                 .alpha(alpha = alpha.value),
-            painter = painterResource(id = R.drawable.marketmatelogo),
+            painter = painterResource(id = R.drawable.splash_logo_2),
             contentDescription = stringResource(R.string.market_mate)
         )
     }

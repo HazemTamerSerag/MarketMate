@@ -13,6 +13,13 @@ val segoeFontFamily = FontFamily(
     Font(R.font.segoeuithibd, FontWeight.Bold),
 )
 
+val andadaProFontFamily = FontFamily(
+    Font(R.font.andada_pro, FontWeight.Normal),
+    Font(R.font.andada_pro_medium, FontWeight.Medium),
+    Font(R.font.andada_pro_semibold, FontWeight.SemiBold),
+    Font(R.font.andada_pro_bold, FontWeight.Bold),
+)
+
 // Set of Material typography styles to start with
 val Typography = Typography(
 //    h1

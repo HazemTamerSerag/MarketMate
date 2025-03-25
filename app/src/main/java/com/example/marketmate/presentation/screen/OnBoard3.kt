@@ -80,9 +80,13 @@ fun OnBoard3(
                 tts?.language = if (isArabic) Locale("ar") else Locale.US
                 isTtsReady = true
                 if (!isMuted) {
-                    speakText(tts, title) { spoken ->
-                        spokenText = spoken
-                    }
+                    speakText(
+                        tts, title,
+                        onWordSpoken = { spoken ->
+                            spokenText = spoken
+                        },
+                        onNextClick = onNextClick
+                    )
                 }
             } else {
                 Log.e("OnBoard3", "TTS Initialization Failed!")
@@ -131,9 +135,13 @@ fun OnBoard3(
                         tts?.stop()
                     } else {
                         Log.d("OnBoard3", "Resuming TTS.")
-                        speakText(tts, title) { spoken ->
-                            spokenText = spoken
-                        }
+                        speakText(
+                            tts, title,
+                            onWordSpoken = { spoken ->
+                                spokenText = spoken
+                            },
+                            onNextClick = onNextClick
+                        )
                     }
                     isMuted = !isMuted
                 },
@@ -153,7 +161,8 @@ fun OnBoard3(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(vertical = 24.dp)
+                    .padding(horizontal = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Spacer(modifier = Modifier.height(140.dp))
