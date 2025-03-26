@@ -151,7 +151,9 @@ fun OnBoard3(
                     .padding(top = 24.dp)
             ) {
                 Icon(
-                    imageVector = if (isMuted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
+                    painter = if (isMuted) painterResource(R.drawable.sound_on) else painterResource(
+                        R.drawable.ic_sound_on
+                    ),
                     contentDescription = stringResource(R.string.mute),
                     tint = Color.DarkGray
                 )
@@ -165,12 +167,12 @@ fun OnBoard3(
                     .padding(horizontal = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Spacer(modifier = Modifier.height(140.dp))
+                Spacer(modifier = Modifier.height(100.dp))
 
                 // Large Box with Hand and Phone
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(0.9f)
+                        .fillMaxWidth()
                         .aspectRatio(1f)
                         .clip(RoundedCornerShape(60.dp))
                         .background(ThirdLightActive)
@@ -195,16 +197,16 @@ fun OnBoard3(
                         Text(
                             text = stringResource(R.string.effortless),
                             style = TextStyle(
-                                fontSize = 36.sp,
-                                fontWeight = FontWeight.Bold,
+                                fontSize = 35.sp,
+                                fontWeight = FontWeight.ExtraBold,
                                 color = PrimaryDarker
                             )
                         )
                         Text(
                             text = stringResource(R.string.guidance),
                             style = TextStyle(
-                                fontSize = 36.sp,
-                                fontWeight = FontWeight.Bold,
+                                fontSize = 35.sp,
+                                fontWeight = FontWeight.ExtraBold,
                                 color = PrimaryDarker
                             )
                         )
@@ -226,7 +228,7 @@ fun OnBoard3(
                     }
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Description Text
                 Text(
@@ -249,12 +251,12 @@ fun OnBoard3(
                     modifier = Modifier.padding(22.dp)
                 )
 
-                Spacer(modifier = Modifier.height(64.dp))
+                Spacer(modifier = Modifier.weight(1f))
 
                 // Next Button (Arrow)
                 Box(
                     modifier = Modifier
-                        .size(56.dp)
+                        .size(80.dp)
                         .clip(CircleShape)
                         .background(ThirdLightActive)
                         .clickable { tts?.stop()
@@ -262,14 +264,13 @@ fun OnBoard3(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.ArrowForward,
+                        painter = painterResource(R.drawable.ic_arrow),
                         contentDescription = stringResource(R.string.next),
                         tint = Color.DarkGray,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(50.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }

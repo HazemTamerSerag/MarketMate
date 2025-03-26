@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -220,7 +221,7 @@ fun OnBoard1(
                     }
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
                     text = buildAnnotatedString {
@@ -239,17 +240,17 @@ fun OnBoard1(
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(22.dp)
                 )
 
-                Spacer(modifier = Modifier.height(64.dp))
+                Spacer(modifier = Modifier.weight(1f))
 
                 // Next Button (Arrow)
                 Box(
                     modifier = Modifier
-                        .size(56.dp)
+                        .height(80.dp)
+                        .width(80.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFEEEEEE))
+                        .background(Color(0xFFB3C7D1))
                         .clickable {
                             tts?.stop()
                             onNextClick()
@@ -257,13 +258,12 @@ fun OnBoard1(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.ArrowForward,
+                        painter = painterResource(R.drawable.ic_arrow),
                         contentDescription = stringResource(R.string.next),
                         tint = Color.DarkGray,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(50.dp)
                     )
                 }
-                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
