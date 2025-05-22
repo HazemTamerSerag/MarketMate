@@ -1,7 +1,6 @@
 package com.example.marketmate.presentation.screen
 
 import android.speech.tts.TextToSpeech
-import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -16,13 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.VolumeOff
-import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -56,6 +50,7 @@ import com.example.marketmate.R
 import com.example.marketmate.presentation.theme.PrimaryDarker
 import com.example.marketmate.presentation.theme.PrimaryNormal
 import com.example.marketmate.presentation.theme.SecondLightActive
+import com.example.marketmate.presentation.theme.andadaProFontFamily
 import java.util.Locale
 
 @Composable
@@ -65,7 +60,6 @@ fun OnBoard2(
 ) {
     val context = LocalContext.current
     val isArabic = LocalContext.current.resources.configuration.locales[0].language == "ar"
-
     var tts by remember { mutableStateOf<TextToSpeech?>(null) }
     var isMuted by remember { mutableStateOf(false) }
     val title = stringResource(R.string.title2Onborad2)
@@ -83,10 +77,10 @@ fun OnBoard2(
                 if (!isMuted) {
                     speakText(
                         tts, title,
+                        onNextClick = onNextClick,
                         onWordSpoken = { spoken ->
                             spokenText = spoken
-                        },
-                        onNextClick = onNextClick
+                        }
                     )
                 }
             } else {
@@ -122,6 +116,7 @@ fun OnBoard2(
                 Text(
                     text = stringResource(R.string.skip),
                     style = TextStyle(
+                        fontFamily = andadaProFontFamily,
                         fontSize = 16.sp,
                         color = Color.Black
                     )
@@ -198,6 +193,7 @@ fun OnBoard2(
                         Text(
                             text = stringResource(R.string.point),
                             style = TextStyle(
+                                fontFamily = andadaProFontFamily,
                                 fontSize = 35.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = PrimaryDarker
@@ -206,6 +202,7 @@ fun OnBoard2(
                         Text(
                             text = stringResource(R.string.scan),
                             style = TextStyle(
+                                fontFamily = andadaProFontFamily,
                                 fontSize = 35.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = PrimaryDarker
@@ -214,6 +211,7 @@ fun OnBoard2(
                         Text(
                             text = stringResource(R.string.listen),
                             style = TextStyle(
+                                fontFamily = andadaProFontFamily,
                                 fontSize = 35.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = PrimaryDarker
@@ -254,9 +252,12 @@ fun OnBoard2(
                             }
                         }
                     },
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
+                    style = TextStyle(
+                        fontFamily = andadaProFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center
+                    )
                 )
 
                 Spacer(modifier = Modifier.weight(1f))

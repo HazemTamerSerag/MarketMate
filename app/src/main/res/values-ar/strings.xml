@@ -1,13 +1,15 @@
 <resources>
     <string name="app_name">رفيق السوق</string>
     <string name="translate">ترجمة</string>
+    <string name="now_you_can_take_a_picture">رائع! الآن يمكنك التقاط صورة</string>
     <string name="market_mate_logo">شعار رفيق السوق</string>
     <string name="feedback">ملاحظات</string>
     <string name="select_your_preferred_language">اختر لغتك المفضلة</string>
-    <string name="Arabic">العربية</string>
+    <string name="arabic">العربية</string>
     <string name="english">الإنجليزية</string>
     <string name="take_photo">التقط صورة</string>
     <string name="please_point_the_camera_at_the_product">يرجى توجيه الكاميرا نحو المنتج</string>
+    <string name="take_picture_now">رائع، يمكنك الآن التقاط صورة</string>
     <string name="market_mate">رفيق السوق</string>
     <string name="quality_analysis_in_progress">جارٍ تحليل الجودة</string>
     <string name="excellent_quality_confirmed">تم تأكيد الجودة الممتازة</string>
@@ -45,4 +47,8 @@
     <string name="effortless">بلا مجهود</string>
     <string name="guidance">إرشاد</string>
     <string name="title3Onboard3">مع تعليمات صوتية واضحة وتصفح سهل للتطبيق، لم يكن التسوق للحصول على أفضل المنتجات بهذه السهولة من قبل</string>
+    <string name="camera_permission_is_required">مطلوب إذن الكاميرا!</string>
+    <string name="camera_and_audio_permissions_required">مطلوب إذن الكاميرا والميكروفون</string>
+    <string name="audio_permission_is_required">مطلوب إذن الميكروفون لتقديم التعليقات الصوتية</string>
+
 </resources>

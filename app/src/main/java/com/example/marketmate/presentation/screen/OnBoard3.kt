@@ -1,7 +1,6 @@
 package com.example.marketmate.presentation.screen
 
 import android.speech.tts.TextToSpeech
-import android.speech.tts.UtteranceProgressListener
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -18,10 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.VolumeOff
-import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -55,6 +50,8 @@ import com.example.marketmate.R
 import com.example.marketmate.presentation.theme.PrimaryDarker
 import com.example.marketmate.presentation.theme.PrimaryNormal
 import com.example.marketmate.presentation.theme.ThirdLightActive
+import com.example.marketmate.presentation.theme.andadaProFontFamily
+import kotlinx.coroutines.delay
 import java.util.Locale
 
 @Composable
@@ -64,12 +61,12 @@ fun OnBoard3(
 ) {
     val context = LocalContext.current
     val isArabic = LocalContext.current.resources.configuration.locales[0].language == "ar"
-
     var tts by remember { mutableStateOf<TextToSpeech?>(null) }
     var isMuted by remember { mutableStateOf(false) }
     val title = stringResource(R.string.title3Onboard3)
     var spokenText by remember { mutableStateOf("") }
     var isTtsReady by remember { mutableStateOf(false) }
+
     // Initialize TTS
     LaunchedEffect(Unit) {
         Log.d("OnBoard3", "Initializing TTS...")
@@ -80,17 +77,22 @@ fun OnBoard3(
                 tts?.language = if (isArabic) Locale("ar") else Locale.US
                 isTtsReady = true
                 if (!isMuted) {
+                    // Start speaking and navigate after it's done
                     speakText(
                         tts, title,
-                        onWordSpoken = { spoken ->
-                            spokenText = spoken
-                        },
-                        onNextClick = onNextClick
+                        onNextClick = onNextClick, // Here we pass the navigation logic
+                        onWordSpoken = { spoken -> spokenText = spoken }
                     )
                 }
             } else {
                 Log.e("OnBoard3", "TTS Initialization Failed!")
             }
+        }
+    }
+    LaunchedEffect(spokenText) {
+        if (spokenText.isNotEmpty()) {
+            delay(900) // Adjust delay to match TTS length
+            onNextClick() // Go to the next screen after delay
         }
     }
     CompositionLocalProvider(LocalLayoutDirection provides if (isArabic) LayoutDirection.Rtl else LayoutDirection.Ltr) {
@@ -121,6 +123,7 @@ fun OnBoard3(
                 Text(
                     text = stringResource(R.string.skip),
                     style = TextStyle(
+                        fontFamily = andadaProFontFamily,
                         fontSize = 16.sp,
                         color = Color.Black
                     )
@@ -197,6 +200,7 @@ fun OnBoard3(
                         Text(
                             text = stringResource(R.string.effortless),
                             style = TextStyle(
+                                fontFamily = andadaProFontFamily,
                                 fontSize = 35.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = PrimaryDarker
@@ -205,6 +209,7 @@ fun OnBoard3(
                         Text(
                             text = stringResource(R.string.guidance),
                             style = TextStyle(
+                                fontFamily = andadaProFontFamily,
                                 fontSize = 35.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = PrimaryDarker
@@ -245,9 +250,12 @@ fun OnBoard3(
                             }
                         }
                     },
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
+                    style = TextStyle(
+                        fontFamily = andadaProFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center
+                    ),
                     modifier = Modifier.padding(22.dp)
                 )
 
@@ -259,8 +267,10 @@ fun OnBoard3(
                         .size(80.dp)
                         .clip(CircleShape)
                         .background(ThirdLightActive)
-                        .clickable { tts?.stop()
-                            onNextClick() },
+                        .clickable {
+                            tts?.stop()
+                            onNextClick()
+                                   },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(

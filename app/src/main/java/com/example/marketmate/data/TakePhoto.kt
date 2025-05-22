@@ -9,9 +9,13 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.camera.view.LifecycleCameraController
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.core.content.ContextCompat
 
 fun takePhoto(
@@ -55,21 +59,75 @@ fun DrawScope.drawViewfinderCorner(
     y: Float,
     length: Float,
     isLeft: Boolean,
-    isTop: Boolean
+    isTop: Boolean,
+    cornerRadius: Float = 55f
 ) {
     val strokeWidth = 6f
-    drawLine(
+    
+    val path = Path().apply {
+        if (isLeft) {
+            if (isTop) {
+                // Top-left corner
+                moveTo(x + cornerRadius, y)
+                lineTo(x + length, y)
+                moveTo(x, y + cornerRadius)
+                lineTo(x, y + length)
+                arcTo(
+                    Rect(x, y, x + 2 * cornerRadius, y + 2 * cornerRadius),
+                    180f,
+                    90f,
+                    false
+                )
+            } else {
+                // Bottom-left corner
+                moveTo(x, y)
+                lineTo(x, y + length - cornerRadius)
+                moveTo(x + cornerRadius, y + length)
+                lineTo(x + length, y + length)
+                arcTo(
+                    Rect(x, y + length - 2 * cornerRadius, x + 2 * cornerRadius, y + length),
+                    90f,
+                    90f,
+                    false
+                )
+            }
+        } else {
+            if (isTop) {
+                // Top-right corner
+                moveTo(x, y)
+                lineTo(x + length - cornerRadius, y)
+                moveTo(x + length, y + cornerRadius)
+                lineTo(x + length, y + length)
+                moveTo(x + length - cornerRadius, y)
+                arcTo(
+                    Rect(x + length - 2 * cornerRadius, y, x + length, y + 2 * cornerRadius),
+                    270f,
+                    90f,
+                    false
+                )
+            } else {
+                // Bottom-right corner
+                moveTo(x, y + length)
+                lineTo(x + length - cornerRadius, y + length)
+                moveTo(x + length, y)
+                lineTo(x + length, y + length - cornerRadius)
+                arcTo(
+                    Rect(x + length - 2 * cornerRadius, y + length - 2 * cornerRadius, x + length, y + length),
+                    0f,
+                    90f,
+                    false
+                )
+            }
+        }
+    }
+    
+    drawPath(
+        path = path,
         color = Color.White,
-        start = Offset(x, if (isTop) y else y + length),
-        end = Offset(x + length, if (isTop) y else y + length),
-        strokeWidth = strokeWidth,
-        cap = StrokeCap.Round
-    )
-    drawLine(
-        color = Color.White,
-        start = Offset(if (isLeft) x else x + length, y),
-        end = Offset(if (isLeft) x else x + length, y + length),
-        strokeWidth = strokeWidth,
-        cap = StrokeCap.Round
+        style = Stroke(
+            width = strokeWidth,
+            cap = StrokeCap.Round,
+            join = StrokeJoin.Round
+        )
     )
 }

@@ -1,6 +1,7 @@
 package com.example.marketmate.data
 
 import android.content.Context
+import android.net.ConnectivityManager
 import java.util.Locale
 
 object LanguageUtils {
@@ -27,4 +28,10 @@ object LanguageUtils {
         val sharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
         sharedPreferences.edit().putString("language", language).apply()
     }
+}
+fun isInternetAvailable(context: Context): Boolean {
+    val connectivityManager =
+        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val activeNetwork = connectivityManager.activeNetworkInfo
+    return activeNetwork != null && activeNetwork.isConnected
 }

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -19,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -40,8 +40,8 @@ fun FeedbackDialog(
             Box(
                 modifier = Modifier
                     .background(Color.White, RoundedCornerShape(16.dp))
+                    .size(width = 343.dp, height = 257.dp)
                     .padding(24.dp)
-                    .width(300.dp)
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -75,10 +75,13 @@ fun FeedbackDialog(
                     // Title
                     Text(
                         text = stringResource(R.string.can_you_tell_me_the_feedback_about_the_service),
-                        fontSize = 18.sp,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.W600,
                         color = PrimaryNormal,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
+                            .padding(top = 16.dp)
+
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -86,10 +89,13 @@ fun FeedbackDialog(
                     // Subtitle
                     Text(
                         text = stringResource(R.string.you_can_talk_now),
-                        fontSize = 14.sp,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.W400,
                         color = Color.Gray,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
+                            .padding(top = 16.dp)
+
                     )
                 }
             }

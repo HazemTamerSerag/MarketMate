@@ -1,5 +1,6 @@
 package com.example.marketmate.presentation.screen
 
+import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
@@ -18,10 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.VolumeOff
-import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -118,6 +115,7 @@ fun OnBoard1(
                 Text(
                     text = stringResource(R.string.skip),
                     style = TextStyle(
+                        fontFamily = andadaProFontFamily,
                         fontSize = 18.sp,
                         color = Color.Black
                     )
@@ -166,10 +164,10 @@ fun OnBoard1(
                 Text(
                     text = stringResource(R.string.welcome_to),
                     style = TextStyle(
-                        fontSize = 40.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = PrimaryDarker,
                         fontFamily = andadaProFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 40.sp,
+                        color = PrimaryDarker,
                         textAlign = TextAlign.Center
                     )
                 )
@@ -189,10 +187,10 @@ fun OnBoard1(
                         Text(
                             text = stringResource(R.string.market_mate),
                             style = TextStyle(
-                                fontSize = 40.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = PrimaryDarker,
                                 fontFamily = andadaProFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 40.sp,
+                                color = PrimaryDarker,
                                 textAlign = TextAlign.Center
                             )
                         )
@@ -237,9 +235,12 @@ fun OnBoard1(
                             }
                         }
                     },
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
+                    style = TextStyle(
+                        fontFamily = andadaProFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center
+                    )
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -268,24 +269,28 @@ fun OnBoard1(
         }
     }
 }
-
-// Function to handle TTS
 fun speakText(
     tts: TextToSpeech?,
     text: String,
     onWordSpoken: (String) -> Unit,
     onNextClick: () -> Unit
 ) {
-    tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "tts_id")
+    val params = Bundle().apply {
+        putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "tts_id")
+    }
+
+    tts?.speak(text, TextToSpeech.QUEUE_FLUSH, params, "tts_id")
     onWordSpoken("") // Reset spoken words
+
+    // Use the listener to detect when the speech finishes
     tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
         override fun onStart(utteranceId: String?) {
             Log.d("TTS", "Speech started")
         }
 
         override fun onDone(utteranceId: String?) {
-            onNextClick()
             Log.d("TTS", "Speech completed")
+            onNextClick()
         }
 
         override fun onError(utteranceId: String?) {

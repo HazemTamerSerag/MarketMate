@@ -1,18 +1,20 @@
 <resources>
     <string name="app_name">MarketMate</string>
     <string name="translate">Translate</string>
+    <string name="now_you_can_take_a_picture">Great now you can take a picture</string>
     <string name="market_mate_logo">Market Mate Logo</string>
     <string name="feedback">Feedback</string>
     <string name="select_your_preferred_language">Select Your Preferred Language</string>
-    <string name="Arabic">العربية</string>
+    <string name="arabic">العربية</string>
     <string name="english">English</string>
     <string name="take_photo">Take photo</string>
     <string name="please_point_the_camera_at_the_product">Please point the camera at the product</string>
+    <string name="take_picture_now">Great, now you can take a picture</string>
     <string name="market_mate">Market Mate</string>
     <string name="quality_analysis_in_progress">Quality analysis in progress</string>
     <string name="excellent_quality_confirmed">Excellent quality confirmed</string>
     <string name="great_choice">Great choice</string>
-    <string name="low_quality_product">Low quality product</string>
+    <string name="low_quality_product">This product has low quality</string>
     <string name="please_select_better">Please select better</string>
     <string name="can_you_tell_me_the_feedback_about_the_service">Can you tell me the feedback about the service?</string>
     <string name="you_can_talk_now">You can talk now</string>
@@ -35,7 +37,7 @@
     <string name="welcome_to">Welcome To</string>
     <string name="market_mate_assistant_robot">Market Mate Assistant Robot</string>
     <string name="title1Onbo">Your AI-powered shopping assistant, making it easy for visually impaired users to independently check the quality of fruits and vegetables with a simple camera scan</string>
-    <string name="skip">skip</string>
+    <string name="skip">Skip</string>
     <string name="hand_holding_phone">Hand holding phone</string>
     <string name="point">Point,</string>
     <string name="scan">Scan,</string>
@@ -45,4 +47,9 @@
     <string name="effortless">Effortless</string>
     <string name="guidance">Guidance</string>
     <string name="title3Onboard3">With clear audio instructions and easy app navigation, shopping for the best produce has never been this accessible</string>
+    <string name="camera_permission_is_required">Camera permission is required!</string>
+    <string name="camera_and_audio_permissions_required">Camera and microphone permissions are required</string>
+    <string name="audio_permission_is_required">Microphone permission is required for voice feedback</string>
+    <string name="can_t_recognize_this_product_please_try_again">Can\'t recognize this product, please try again.</string>
+    <string name="error">Error</string>
 </resources>
