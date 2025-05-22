@@ -233,12 +233,12 @@ fun UpperPartPreview(
                 isRecording = true
 
                 job = coroutineScope.launch {
-                    val audioFile = viewModel.startFeedbackRecording(context)
+                    val audioFile = viewModel.startFeedbackRecording()
                     delay(5000)
                     viewModel.stopFeedbackRecording()
                     isRecording = false
                     showFeedbackRequestDialog = false
-                    viewModel.sendFeedbackToWhatsApp(context, audioFile)
+                    viewModel.sendFeedbackToWhatsApp(audioFile)
 
                     showFeedbackSuccessDialog = true
                     delay(3000)
@@ -477,16 +477,14 @@ fun MainScreenContent(
             LaunchedEffect(showFeedbackDialog) {
                 if (showFeedbackDialog && checkAndRequestFeedbackPermissions(context)) {
                     isRecording = true
-
-                    job = coroutineScope.launch {
-                        val audioFile = viewModel.startFeedbackRecording(context)
-                        delay(5000)
-                        viewModel.stopFeedbackRecording()
+                    viewModel.startFeedbackRecording()
+                    
+                    // Auto close feedback dialog after 8 seconds
+                    delay(8000)
+                    if (isRecording) {
+                        val recordedFile = viewModel.stopFeedbackRecording()
                         isRecording = false
-                        viewModel.sendFeedbackToWhatsApp(context, audioFile)
-                        showFeedbackSuccessDialog = true
-                        delay(3000)
-                        showFeedbackSuccessDialog = false
+                        viewModel.submitFeedback(recordedFile)
                     }
                 }
             }
@@ -503,9 +501,11 @@ fun MainScreenContent(
                     }
                 )
             }
-            if (showFeedbackSuccessDialog) {
+            
+            val showThanksDialog by viewModel.showThanksDialog.collectAsState()
+            if (showThanksDialog) {
                 ThanksDialog(
-                    onDismiss = { showFeedbackSuccessDialog = false }
+                    onDismiss = {}
                 )
             }
         }

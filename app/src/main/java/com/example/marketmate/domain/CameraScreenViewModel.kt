@@ -19,6 +19,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.marketmate.data.AnalysisResult
 import com.example.marketmate.data.AnalysisResultType
 import com.example.marketmate.data.ApiService
+import com.example.marketmate.data.FeedbackApiService
 import com.example.marketmate.data.LanguageUtils
 import com.example.marketmate.data.TFLiteClassifier
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +33,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Retrofit
@@ -40,18 +42,24 @@ import java.io.File
 import java.io.IOException
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import android.provider.Settings
 
 class CameraScreenViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
         private const val TAG = "CameraScreenVM"
         private const val RESULT_DURATION = 3000L
+        private const val MAX_RECORDING_DURATION = 7000L // 7 seconds for feedback recording
+        private const val THANKS_DIALOG_DURATION = 5000L // 5 seconds for thanks dialog
+        private const val WHATSAPP_NUMBER = "201271669552" // Egyptian number format
     }
 
     private val context = application.applicationContext
     private val classifier = TFLiteClassifier(context) // Offline TFLite classifier
-
     private var textToSpeech: TextToSpeech? = null
+    private val apiService = RetrofitClient.apiService
+    private fun getDeviceId(): String = Build.ID
+    private fun checkAndRequestFeedbackPermissions(): Boolean = true
 
     init {
         textToSpeech = TextToSpeech(context) {
@@ -60,16 +68,25 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
             }
         }
     }
-
+    private fun isInternetAvailable(context: Context): Boolean {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = cm.activeNetwork ?: return false
+        val capabilities = cm.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+    }
     private fun speakText(text: String) {
         textToSpeech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+    }
+    fun checkInternetAndSetMode(context: Context) {
+        _isOnline.value = isInternetAvailable(context)
     }
 
     object RetrofitClient {
         val client = OkHttpClient.Builder()
-            .connectTimeout(15, TimeUnit.SECONDS)
-            .readTimeout(15, TimeUnit.SECONDS)
-            .writeTimeout(15, TimeUnit.SECONDS)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
             .build()
 
         private val retrofit = Retrofit.Builder()
@@ -81,54 +98,37 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
         val apiService: ApiService = retrofit.create(ApiService::class.java)
     }
 
-    private val apiService = RetrofitClient.apiService
 
     private val _isOnline = MutableStateFlow(false)
     val isOnline: StateFlow<Boolean> = _isOnline
-
-    private fun isInternetAvailable(context: Context): Boolean {
-        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = cm.activeNetwork ?: return false
-        val capabilities = cm.getNetworkCapabilities(network) ?: return false
-        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
-                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-    }
-
-    fun checkInternetAndSetMode(context: Context) {
-        _isOnline.value = isInternetAvailable(context)
-    }
-
     private var audioPlayer: MediaPlayer? = null
     private val _serverPrediction = MutableStateFlow<String?>(null)
     val serverPrediction = _serverPrediction.asStateFlow()
-
     private val _showLoadingDialog = MutableStateFlow(false)
     val showLoadingDialog = _showLoadingDialog.asStateFlow()
-
     private val _showSuccessDialog = MutableStateFlow(false)
     val showSuccessDialog = _showSuccessDialog.asStateFlow()
-
     private val _showFailedDialog = MutableStateFlow(false)
     val showFailedDialog = _showFailedDialog.asStateFlow()
-
     private val _showErrorDialog = MutableStateFlow(false)
     val showErrorDialog = _showErrorDialog.asStateFlow()
-
-
     private val _analysisResult = MutableStateFlow<AnalysisResult?>(null)
     val analysisResult = _analysisResult.asStateFlow()
-
     private val _isSheetVisible = MutableStateFlow(false)
-    val isSheetVisible = _isSheetVisible.asStateFlow()
+    val isSheetVisible: StateFlow<Boolean> = _isSheetVisible.asStateFlow()
 
-    private val _selectedLanguage = MutableStateFlow("en")
+    private val _showThanksDialog = MutableStateFlow(false)
+    val showThanksDialog: StateFlow<Boolean> = _showThanksDialog.asStateFlow()
 
+    private val _selectedLanguage = MutableStateFlow("ar")
     private val _showFeedbackDialog = MutableStateFlow(false)
     val showFeedbackDialog = _showFeedbackDialog.asStateFlow()
     private val _finalAnalysisCount = MutableStateFlow(0)
-
     private var audioRecorder: MediaRecorder? = null
     private var isRecording = false
+    private var recordingStartTime = 0L
+    private var currentRecordingFile: File? = null
+
 
     fun onTakePhoto(bitmap: Bitmap) {
         viewModelScope.launch {
@@ -140,7 +140,6 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
             }
         }
     }
-
     private fun uploadToServer(bitmap: Bitmap) {
         viewModelScope.launch {
             try {
@@ -155,7 +154,6 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
 
                 if (response.isSuccessful) {
                     response.body()?.let { uploadResponse ->
-                        // Add this logging to see what you're actually getting
                         Log.d("ServerResponse", "Prediction: '${uploadResponse.prediction}'")
                         Log.d("ServerResponse", "Audio file: '${uploadResponse.audio_file}'")
 
@@ -185,9 +183,10 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
                         }
                         incrementAndCheckFeedback()
                     }
+                } else {
+                    handleException()
                 }
-            }catch (e: Exception) {
-
+            } catch (e: Exception) {
                 handleException()
             }
         }
@@ -205,15 +204,15 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
 
             if (fruitType.contains("Fresh", ignoreCase = true) && confidence >= 0.97f) {
                 _showSuccessDialog.value = true
-                if (!isOnline.value) speakText("النتيجة: طازجة")
+                speakText("النتيجة: طازجة")
                 delay(RESULT_DURATION)
                 _showSuccessDialog.value = false
             } else if (fruitType.contains("Rotten", ignoreCase = true) && confidence < 0.97f) {
                 _showFailedDialog.value = true
-                if (!isOnline.value) speakText("النتيجة: تالفة")
+                speakText("النتيجة: تالفة")
                 delay(RESULT_DURATION)
                 _showFailedDialog.value = false
-            }else {
+            } else {
                 handleServerError()
             }
             incrementAndCheckFeedback()
@@ -221,24 +220,26 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
             handleException()
         }
     }
-
     private fun incrementAndCheckFeedback() {
         _finalAnalysisCount.value++
+        Log.d(TAG, "Analysis count: ${_finalAnalysisCount.value}")
+
+        // Show feedback dialog after 2 responses
         if (_finalAnalysisCount.value >= 5) {
-            _showFeedbackDialog.value = true
-            _finalAnalysisCount.value = 0
+            viewModelScope.launch {
+                delay(5000) // Small delay after response completes
+                showFeedbackDialog()
+                _finalAnalysisCount.value = 0 // Reset counter
+            }
         }
     }
-
     private fun handleServerError() {
         viewModelScope.launch {
             _showErrorDialog.value = true
-
             delay(RESULT_DURATION)
             _showErrorDialog.value = false
         }
     }
-
     private fun handleException() {
         viewModelScope.launch {
             _showErrorDialog.value = true
@@ -247,13 +248,12 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
         }
         setLoadingDialog(false)
     }
-
     private fun setLoadingDialog(show: Boolean) {
         _showLoadingDialog.value = show
     }
-
     private fun bitmapToFile(bitmap: Bitmap): File {
-        val scaledBitmap = Bitmap.createScaledBitmap(bitmap, bitmap.width / 4, bitmap.height / 4, true)
+        val scaledBitmap =
+            Bitmap.createScaledBitmap(bitmap, bitmap.width / 4, bitmap.height / 4, true)
         val file = File(context.cacheDir, "captured_image_${System.currentTimeMillis()}.jpg")
         file.outputStream().use {
             scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 70, it)
@@ -261,12 +261,14 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
         }
         return file
     }
-
     private fun playAudioFromUrl(relativeUrl: String) {
         try {
             audioPlayer?.release()
             val baseUrl = "http://192.168.1.127:8080/"
-            val fullUrl = if (relativeUrl.startsWith("http")) relativeUrl else baseUrl + relativeUrl.removePrefix("/")
+            val fullUrl =
+                if (relativeUrl.startsWith("http")) relativeUrl else baseUrl + relativeUrl.removePrefix(
+                    "/"
+                )
             audioPlayer = MediaPlayer().apply {
                 setDataSource(fullUrl)
                 setOnPreparedListener { start() }
@@ -276,17 +278,24 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
             Log.e(TAG, "Failed to play audio: ${e.message}")
         }
     }
+    fun dismissFeedbackDialog() {
+        Log.d(TAG, "Dismissing feedback dialog")
+        _showFeedbackDialog.value = false
+        _showThanksDialog.value = false
 
-
-
+        // Stop recording if still active
+        if (isRecording) {
+            stopFeedbackRecording()
+            isRecording = false
+        }
+        currentRecordingFile = null
+    }
     fun showSheet() {
         _isSheetVisible.value = true
     }
-
     fun hideSheet() {
         _isSheetVisible.value = false
     }
-
     fun setLanguage(language: String, activity: Activity) {
         viewModelScope.launch {
             _selectedLanguage.value = language
@@ -298,28 +307,34 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
             }
         }
     }
-
     fun showFeedbackDialog() {
+        Log.d(TAG, "Showing feedback dialog")
         _showFeedbackDialog.value = true
+        viewModelScope.launch {
+            checkInternetAndSetMode(context)
+            startFeedbackRecording()
+        }
     }
+    fun startFeedbackRecording(): File? {
+        Log.d(TAG, "Start recording - isOnline: ${_isOnline.value}")
 
-    fun dismissFeedbackDialog() {
-        _showFeedbackDialog.value = false
-    }
-    private fun checkAndRequestFeedbackPermissions(context: Context): Boolean {
-        return true
-    }
-    fun startFeedbackRecording(context: Context): File? {
-        if (!checkAndRequestFeedbackPermissions(context)) return null
+        if (isRecording) {
+            Log.w(TAG, "Already recording. Skipping duplicate call.")
+            return null
+        }
 
-        val recorder = MediaRecorder()
+        if (!checkAndRequestFeedbackPermissions()) {
+            Log.e(TAG, "Missing recording permissions")
+            return null
+        }
+
         val audioFile = File(
             context.getExternalFilesDir(Environment.DIRECTORY_MUSIC),
-            "feedback_recording_${System.currentTimeMillis()}.mp3"
+            "feedback_${System.currentTimeMillis()}.m4a"
         )
 
         return try {
-            recorder.apply {
+            audioRecorder = MediaRecorder().apply {
                 setAudioSource(MediaRecorder.AudioSource.MIC)
                 setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
                 setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
@@ -327,56 +342,129 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
                 prepare()
                 start()
             }
-            audioRecorder = recorder
+
             isRecording = true
+            currentRecordingFile = audioFile
+            Log.d(TAG, "Recording started: ${audioFile.absolutePath}")
             audioFile
-        } catch (e: IOException) {
-            recorder.release()
-            Log.e(TAG, "Failed to start recording: ${e.message}")
+        } catch (e: Exception) {
+            Log.e(TAG, "Recording error: ${e.message}")
+            audioRecorder?.release()
+            audioRecorder = null
             null
         }
     }
-
-    fun stopFeedbackRecording() {
-        audioRecorder?.let {
-            try {
-                it.stop()
-                it.release()
-            } catch (e: RuntimeException) {
-                Log.e(TAG, "Failed to stop recording: ${e.message}")
-            }
+    fun stopFeedbackRecording(): File? {
+        Log.d(TAG, "Stopping recording")
+        return try {
+            audioRecorder?.stop()
+            audioRecorder?.release()
+            isRecording = false
+            val file = currentRecordingFile
+            Log.d(TAG, "Recording stopped, file: ${file?.absolutePath}")
+            file
+        } catch (e: Exception) {
+            Log.e(TAG, "Stop recording failed: ${e.message}")
+            null
+        } finally {
+            audioRecorder = null
+            isRecording = false
         }
-        audioRecorder = null
-        isRecording = false
+    }
+    val client = OkHttpClient.Builder()
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .build()
+    private val feedbackApiService = Retrofit.Builder()
+        .baseUrl("http://192.168.1.127:8080/")
+        .client(client)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+        .create(FeedbackApiService::class.java)
+    fun submitFeedback(audioFile: File?) {
+        val file = audioFile ?: currentRecordingFile ?: run {
+            Log.e(TAG, "No audio file to submit")
+            return
+        }
+
+        Log.d(TAG, "Submitting feedback - File: ${file.name}, Online: ${_isOnline.value}")
+        viewModelScope.launch {
+            if (_isOnline.value) {
+                trySubmitFeedbackViaAPI(file)
+            } else {
+                Log.d(TAG, "Device is offline, using WhatsApp")
+                sendFeedbackToWhatsApp(file)
+            }
+            showThanksDialog()
+        }
+    }
+    private suspend fun trySubmitFeedbackViaAPI(file: File): Boolean {
+        return try {
+            val deviceId = getDeviceId()
+            val audioPart = MultipartBody.Part.createFormData(
+                "voice_message", file.name,
+                file.asRequestBody("audio/m4a".toMediaTypeOrNull())
+            )
+
+            val idPart = deviceId.toRequestBody("text/plain".toMediaTypeOrNull())
+
+
+            val response = feedbackApiService.submitFeedback(idPart, audioPart)
+
+            if (response.isSuccessful) {
+                val responseBody = response.body()
+                Log.d(TAG, "API Response: ${responseBody}")
+                val feedbackId = responseBody?.feedback_ID ?: "N/A"
+                Log.d(TAG, "Feedback sent successfully - ID: $feedbackId")
+                file.delete()
+                return true
+            } else {
+                val errorMsg = response.errorBody()?.string()
+                Log.e(TAG, "API Error (${response.code()}): $errorMsg")
+                return false
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "API Exception: ${e.localizedMessage}")
+            return false
+        }
+    }
+    private fun showThanksDialog() {
+        viewModelScope.launch {
+            _showFeedbackDialog.value = false
+            _showThanksDialog.value = true
+            delay(THANKS_DIALOG_DURATION)
+            _showThanksDialog.value = false
+        }
     }
 
-
-    fun sendFeedbackToWhatsApp(context: Context, audioFile: File?) {
-        audioFile ?: return
+    fun sendFeedbackToWhatsApp(file: File?) {
+        if (file == null) {
+            Log.e(TAG, "WhatsApp fallback failed: file is null")
+            return
+        }
 
         val uri = FileProvider.getUriForFile(
             context,
             "${context.packageName}.provider",
-            audioFile
+            file
         )
 
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "audio/mp3"
             `package` = "com.whatsapp"
             putExtra(Intent.EXTRA_STREAM, uri)
-            putExtra("jid", "201271669552@s.whatsapp.net")
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            putExtra("jid", "$WHATSAPP_NUMBER@s.whatsapp.net") // رقم واتساب بصيغة دولية من غير "+"
+            putExtra(Intent.EXTRA_TEXT, "تعليق صوتي على التطبيق")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
         }
 
         try {
             context.startActivity(intent)
-            _showFeedbackDialog.value = false
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to send feedback via WhatsApp: ${e.message}")
+            Log.e(TAG, "WhatsApp intent failed: ${e.localizedMessage}")
+        } finally {
+            _showFeedbackDialog.value = false
         }
-    }
-    override fun onCleared() {
-        super.onCleared()
-        audioPlayer?.release()
     }
 }

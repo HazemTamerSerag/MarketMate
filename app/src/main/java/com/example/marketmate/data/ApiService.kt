@@ -14,5 +14,12 @@ interface ApiService {
         @Part("device_ID") deviceId: RequestBody,
         @Part image: MultipartBody.Part
     ): Response<UploadResponse>
-
+}
+interface FeedbackApiService {
+    @Multipart
+    @POST("api/submit-feedback")
+    suspend fun submitFeedback(
+        @Part("device_ID") deviceId: RequestBody,
+        @Part voiceMessage: MultipartBody.Part
+    ): Response<FeedbackResponse>
 }

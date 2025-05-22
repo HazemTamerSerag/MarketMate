@@ -2,6 +2,7 @@ package com.example.marketmate.presentation.components.dialogs
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -42,12 +43,13 @@ fun ErrorDialog(viewModel: CameraScreenViewModel) {
                 modifier = Modifier
                     .background(Color.White, RoundedCornerShape(16.dp))
                     .size(width = 343.dp, height = 257.dp)
-                    .padding(24.dp)
             ) {
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Spacer(modifier = Modifier.height(36.dp))
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center                ) {
 
                     // Error Icon
                     Image(
