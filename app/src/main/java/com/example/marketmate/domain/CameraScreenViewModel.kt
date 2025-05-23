@@ -21,7 +21,7 @@ import com.example.marketmate.data.AnalysisResultType
 import com.example.marketmate.data.ApiService
 import com.example.marketmate.data.FeedbackApiService
 import com.example.marketmate.data.LanguageUtils
-import com.example.marketmate.data.TFLiteClassifier
+import com.example.marketmate.data.ONNXClassifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -55,7 +55,7 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
     }
 
     private val context = application.applicationContext
-    private val classifier = TFLiteClassifier(context) // Offline TFLite classifier
+    private val classifier = ONNXClassifier(context) // Offline ONNX classifier
     private var textToSpeech: TextToSpeech? = null
     private val apiService = RetrofitClient.apiService
     private fun getDeviceId(): String = Build.ID
@@ -81,6 +81,8 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
     fun checkInternetAndSetMode(context: Context) {
         _isOnline.value = isInternetAvailable(context)
     }
+
+
 
     object RetrofitClient {
         val client = OkHttpClient.Builder()
@@ -116,6 +118,13 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
     val analysisResult = _analysisResult.asStateFlow()
     private val _isSheetVisible = MutableStateFlow(false)
     val isSheetVisible: StateFlow<Boolean> = _isSheetVisible.asStateFlow()
+    
+    // Item selection state
+    private val _selectedItem = MutableStateFlow("Apple")
+    val selectedItem = _selectedItem.asStateFlow()
+    private val availableItems = listOf("Apple", "Banana", "Mango", "Orange", "Strawberry",
+                                      "Carrot", "Potato", "Tomato", "Cucumber", "Bellpepper")
+    val items = availableItems
 
     private val _showThanksDialog = MutableStateFlow(false)
     val showThanksDialog: StateFlow<Boolean> = _showThanksDialog.asStateFlow()
@@ -140,6 +149,7 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
             }
         }
     }
+
     private fun uploadToServer(bitmap: Bitmap) {
         viewModelScope.launch {
             try {
@@ -192,32 +202,78 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
         }
     }
     private suspend fun runLocalClassification(bitmap: Bitmap) {
+        Log.d(TAG, "Starting offline image analysis...")
         try {
-            setLoadingDialog(true)
+            _showLoadingDialog.value = true
             val startTime = System.currentTimeMillis()
 
-            val (fruitType, confidence) = classifier.classifyImage(bitmap)
+            Log.d(TAG, "Using ONNX classifier for offline analysis")
+            val (detectedClass, confidence) = classifier.classifyImage(bitmap)
+            Log.d(TAG, "Offline analysis completed successfully")
             val analysisTime = System.currentTimeMillis() - startTime
             if (RESULT_DURATION > analysisTime) delay(RESULT_DURATION - analysisTime)
 
-            setLoadingDialog(false)
+            _showLoadingDialog.value = false
+            Log.d(TAG, "Setting analysis result: class=$detectedClass, confidence=${confidence * 100}%")
 
-            if (fruitType.contains("Fresh", ignoreCase = true) && confidence >= 0.97f) {
-                _showSuccessDialog.value = true
-                speakText("النتيجة: طازجة")
-                delay(RESULT_DURATION)
-                _showSuccessDialog.value = false
-            } else if (fruitType.contains("Rotten", ignoreCase = true) && confidence < 0.97f) {
-                _showFailedDialog.value = true
-                speakText("النتيجة: تالفة")
-                delay(RESULT_DURATION)
-                _showFailedDialog.value = false
-            } else {
-                handleServerError()
+            // Extract the item type from the detected class
+            val itemType = detectedClass.replace("Fresh", "").replace("Rotten", "")
+            val isFresh = detectedClass.startsWith("Fresh", ignoreCase = true)
+            
+            // Define confidence threshold based on item type
+            val confidenceThreshold = when (itemType) {
+                "Apple", "Orange" -> 0.60f  // Easier to classify
+                "Banana", "Carrot" -> 0.65f // Moderate difficulty
+                else -> 0.70f  // Default threshold for other items
             }
-            incrementAndCheckFeedback()
+            
+            Log.d(TAG, "Classification details:")
+            Log.d(TAG, "- Detected item: $itemType")
+            Log.d(TAG, "- Freshness: ${if (isFresh) "Fresh" else "Rotten"}")
+            Log.d(TAG, "- Confidence: ${confidence * 100}%")
+            Log.d(TAG, "- Required confidence: ${confidenceThreshold * 100}%")
+            
+            if (confidence >= confidenceThreshold) {
+                if (isFresh) {
+                    _showSuccessDialog.value = true
+                    speakText("النتيجة: طازجة")
+                    delay(RESULT_DURATION)
+                    _showSuccessDialog.value = false
+                } else {
+                    _showFailedDialog.value = true
+                    speakText("النتيجة: تالفة")
+                    delay(RESULT_DURATION)
+                    _showFailedDialog.value = false
+                }
+            } else {
+                // Low confidence in the prediction
+                viewModelScope.launch {
+                    _showErrorDialog.value = true
+                    delay(RESULT_DURATION)
+                    _showErrorDialog.value = false
+                }
+                speakText("النتيجة: غير واضح")
+            }
+            
+            _finalAnalysisCount.value++
+            Log.d(TAG, "Analysis count: ${_finalAnalysisCount.value}")
+
+            // Show feedback dialog after 5 responses
+            if (_finalAnalysisCount.value >= 5) {
+                viewModelScope.launch {
+                    delay(5000) // Small delay after response completes
+                    _showFeedbackDialog.value = true
+                    _finalAnalysisCount.value = 0 // Reset counter
+                }
+            }
         } catch (e: Exception) {
-            handleException()
+            Log.e(TAG, "Error in offline analysis: ${e.message}")
+            Log.e(TAG, "Stack trace: ${e.stackTrace.joinToString("\n")}")
+            viewModelScope.launch {
+                _showErrorDialog.value = true
+                delay(RESULT_DURATION)
+                _showErrorDialog.value = false
+            }
         }
     }
     private fun incrementAndCheckFeedback() {
@@ -393,7 +449,7 @@ class CameraScreenViewModel(application: Application) : AndroidViewModel(applica
             if (_isOnline.value) {
                 trySubmitFeedbackViaAPI(file)
             } else {
-                Log.d(TAG, "Device is offline, using WhatsApp")
+                Log.d(TAG, "Device is offline, switching to offline analysis using ONNX model")
                 sendFeedbackToWhatsApp(file)
             }
             showThanksDialog()
