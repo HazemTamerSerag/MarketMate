@@ -37,6 +37,8 @@
     <string name="welcome_to">مرحبًا بك في</string>
     <string name="market_mate_assistant_robot">روبوت مساعد رفيق السوق</string>
     <string name="title1Onbo">مساعدك الذكي للتسوق، مما يسهل على المستخدمين المكفوفين التحقق من جودة الفواكه والخضروات بشكل مستقل من خلال مسح الكاميرا البسيط</string>
+    <string name="error">خطأ</string>
+    <string name="low_confidence_message">غير قادر على تحديد جودة المنتج بثقة. يرجى المحاولة مرة أخرى مع إضاءة ووضع أفضل.</string>
     <string name="skip">تخطي</string>
     <string name="hand_holding_phone">يد تحمل هاتفًا</string>
     <string name="point">وجّه،</string>

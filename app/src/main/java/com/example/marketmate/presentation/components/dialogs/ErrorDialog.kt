@@ -62,7 +62,7 @@ fun ErrorDialog(viewModel: CameraScreenViewModel) {
 
                     // Title
                     Text(
-                        text = getDisplayText(serverPrediction),
+                        text = viewModel.getDisplayText(),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.W600,
                         color = ErrorColor,

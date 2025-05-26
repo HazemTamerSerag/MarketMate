@@ -52,4 +52,5 @@
     <string name="audio_permission_is_required">Microphone permission is required for voice feedback</string>
     <string name="can_t_recognize_this_product_please_try_again">Can\'t recognize this product, please try again.</string>
     <string name="error">Error</string>
+    <string name="low_confidence_message">Unable to determine product quality with confidence. Please try again with better lighting and positioning.</string>
 </resources>

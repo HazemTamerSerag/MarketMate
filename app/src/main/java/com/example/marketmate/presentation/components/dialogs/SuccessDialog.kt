@@ -58,7 +58,7 @@ fun SuccessDialog(viewModel: CameraScreenViewModel) {
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = getDisplayText(serverPrediction),
+                        text = viewModel.getDisplayText(),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.W600,
                         color = SecondNormalActive,
