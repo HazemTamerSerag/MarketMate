@@ -90,8 +90,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
-    // ONNX Runtime dependency
-    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.16.1")
-    implementation("androidx.compose.animation:animation:1.6.0")
-
+    implementation ("org.tensorflow:tensorflow-lite:2.13.0")
+    implementation ("org.tensorflow:tensorflow-lite-support:0.4.3")
+    implementation ("org.tensorflow:tensorflow-lite-task-vision:0.4.3")
 }

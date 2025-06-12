@@ -30,10 +30,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.Translate
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -71,7 +67,7 @@ import com.example.marketmate.R
 import com.example.marketmate.data.AnalysisResultType
 import com.example.marketmate.data.LanguageUtils
 import com.example.marketmate.data.checkAndRequestFeedbackPermissions
-import com.example.marketmate.data.takePhoto
+import com.example.marketmate.domain.takePhoto
 import com.example.marketmate.domain.CameraScreenViewModel
 import com.example.marketmate.presentation.components.camera.CameraPreview
 import com.example.marketmate.presentation.components.dialogs.ErrorDialog
