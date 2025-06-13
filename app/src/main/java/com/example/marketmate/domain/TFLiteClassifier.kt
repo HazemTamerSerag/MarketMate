@@ -24,84 +24,108 @@ class TFLiteClassifier(private val context: Context) {
     )
 
     init {
+        Log.d("TFLiteClassifier", "Initializing TFLiteClassifier")
         loadModel()
     }
 
     private fun loadModel() {
-        val modelFile = loadModelFile("model.tflite")
-        interpreter = Interpreter(modelFile)
-        val inputShape = interpreter.getInputTensor(0).shape()  // لازم تكون [1, 224, 224, 3]
-        val inputType = interpreter.getInputTensor(0).dataType()
-        Log.d("ModelShape", inputShape.joinToString())
-        Log.d("ModelType", inputType.name)
-
-
+        Log.d("TFLiteClassifier", "Starting model loading process")
+        try {
+            val modelFile = loadModelFile("model.tflite")
+            interpreter = Interpreter(modelFile)
+            val inputShape = interpreter.getInputTensor(0).shape()
+            val inputType = interpreter.getInputTensor(0).dataType()
+            Log.d("TFLiteClassifier", "Model loaded successfully")
+            Log.d("TFLiteClassifier", inputShape.joinToString())
+            Log.d("TFLiteClassifier", inputType.name)
+        } catch (e: Exception) {
+            Log.e("TFLiteClassifier", "Failed to load model: ${e.message}", e)
+            throw e
+        }
     }
 
     fun classifyImage(bitmap: Bitmap): Pair<String, Float> {
-        val resized = Bitmap.createScaledBitmap(bitmap, inputSize, inputSize, true)
-        val input = convertBitmapToByteBuffer(resized)
-        val output = Array(1) { FloatArray(numClasses) }
-        Log.d("TFLiteOutput", "Raw logits: ${output[0].joinToString()}")
+        Log.d("TFLiteClassifier", "Starting image classification")
+        Log.d("TFLiteClassifier", "Input bitmap size: ${bitmap.width}x${bitmap.height}")
 
-        interpreter.run(input, output)
-        val probabilities = softmax(output[0])
+        try {
+            val input = convertBitmapToByteBuffer(bitmap)
+            val output = Array(1) { FloatArray(numClasses) }
 
-        val maxIndex = probabilities.indices.maxByOrNull { probabilities[it] } ?: -1
-        val label = labels[maxIndex]
-        val confidence = probabilities[maxIndex]
+            Log.d("TFLiteClassifier", "Running interpreter...")
+            interpreter.run(input, output)
+            Log.d("TFLiteClassifier", "Raw logits: ${output[0].joinToString()}")
 
-        return Pair(label, confidence)
+            val probabilities = softmax(output[0])
+            Log.d("TFLiteClassifier", "Softmax probabilities calculated")
+
+            val maxIndex = probabilities.indices.maxByOrNull { probabilities[it] } ?: -1
+            val label = labels[maxIndex]
+            val confidence = probabilities[maxIndex]
+
+            Log.d("TFLiteClassifier", "Classification result: $label with confidence: $confidence")
+            return Pair(label, confidence)
+        } catch (e: Exception) {
+            Log.e("TFLiteClassifier", "Classification failed: ${e.message}", e)
+            throw e
+        }
     }
 
     private fun convertBitmapToByteBuffer(bitmap: Bitmap): ByteBuffer {
-        val buffer = ByteBuffer.allocateDirect(4 * inputSize * inputSize * 3)
-        buffer.order(ByteOrder.nativeOrder())
+        Log.d("TFLiteClassifier", "Converting bitmap to ByteBuffer with ImageNet normalization and CHW format")
+        val byteBuffer = ByteBuffer.allocateDirect(1 * 224 * 224 * 3 * 4)
+        byteBuffer.order(ByteOrder.nativeOrder())
+
+        val intValues = IntArray(224 * 224)
+        bitmap.getPixels(intValues, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
 
         val mean = floatArrayOf(0.485f, 0.456f, 0.406f)
         val std = floatArrayOf(0.229f, 0.224f, 0.225f)
 
-        val pixels = IntArray(inputSize * inputSize)
-        bitmap.getPixels(pixels, 0, inputSize, 0, 0, inputSize, inputSize)
+        // CHW format requires separating channels
+        val rChannel = FloatArray(224 * 224)
+        val gChannel = FloatArray(224 * 224)
+        val bChannel = FloatArray(224 * 224)
 
-        // Create 3 arrays for channel-first format
-        val r = FloatArray(inputSize * inputSize)
-        val g = FloatArray(inputSize * inputSize)
-        val b = FloatArray(inputSize * inputSize)
-
-        for (i in pixels.indices) {
-            val pixel = pixels[i]
-            val rf = ((pixel shr 16) and 0xFF) / 255.0f
-            val gf = ((pixel shr 8) and 0xFF) / 255.0f
-            val bf = (pixel and 0xFF) / 255.0f
-
-            r[i] = (rf - mean[0]) / std[0]
-            g[i] = (gf - mean[1]) / std[1]
-            b[i] = (bf - mean[2]) / std[2]
+        for (i in intValues.indices) {
+            val pixelValue = intValues[i]
+            rChannel[i] = (((pixelValue shr 16 and 0xFF) / 255.0f) - mean[0]) / std[0]
+            gChannel[i] = (((pixelValue shr 8 and 0xFF) / 255.0f) - mean[1]) / std[1]
+            bChannel[i] = (((pixelValue and 0xFF) / 255.0f) - mean[2]) / std[2]
         }
 
-        // Append in CHW format: all R, then G, then B
-        r.forEach { buffer.putFloat(it) }
-        g.forEach { buffer.putFloat(it) }
-        b.forEach { buffer.putFloat(it) }
+        // Write channels to ByteBuffer in CHW order
+        rChannel.forEach { byteBuffer.putFloat(it) }
+        gChannel.forEach { byteBuffer.putFloat(it) }
+        bChannel.forEach { byteBuffer.putFloat(it) }
 
-        return buffer
-
+        Log.d("TFLiteClassifier", "ByteBuffer conversion completed")
+        return byteBuffer
     }
 
     private fun softmax(logits: FloatArray): FloatArray {
+        Log.d("TFLiteClassifier", "Calculating softmax")
         val max = logits.maxOrNull() ?: 0f
         val exps = logits.map { Math.exp((it - max).toDouble()).toFloat() }
         val sum = exps.sum()
-        return exps.map { it / sum }.toFloatArray()
+        val result = exps.map { it / sum }.toFloatArray()
+        Log.d("TFLiteClassifier", "Softmax calculation completed")
+        return result
     }
 
     private fun loadModelFile(modelName: String): File {
+        Log.d("TFLiteClassifier", "Loading model file: $modelName")
         val file = File(context.filesDir, modelName)
         if (!file.exists()) {
+            Log.d("TFLiteClassifier", "Model file doesn't exist, copying from assets")
             context.assets.open(modelName).use { input ->
-                FileOutputStream(file).use { output -> input.copyTo(output) }
+                FileOutputStream(file).use { output ->
+                    input.copyTo(output)
+                    Log.d("TFLiteClassifier", "Model file copied successfully")
+                }
             }
+        } else {
+            Log.d("TFLiteClassifier", "Model file already exists")
         }
         return file
     }
