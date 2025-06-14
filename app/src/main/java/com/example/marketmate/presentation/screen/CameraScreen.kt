@@ -61,14 +61,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.marketmate.R
 import com.example.marketmate.data.AnalysisResultType
 import com.example.marketmate.data.LanguageUtils
 import com.example.marketmate.data.checkAndRequestFeedbackPermissions
-import com.example.marketmate.domain.takePhoto
 import com.example.marketmate.domain.CameraScreenViewModel
+import com.example.marketmate.domain.takePhoto
 import com.example.marketmate.presentation.components.camera.CameraPreview
 import com.example.marketmate.presentation.components.dialogs.ErrorDialog
 import com.example.marketmate.presentation.components.dialogs.FailedDialog
@@ -364,6 +365,7 @@ fun MainScreenContent(
     Log.d(TAG, "MainScreenContent Composable entered")
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val isUiFrozen by viewModel.isUiFrozen.collectAsState()
     val showFeedbackDialog by viewModel.showFeedbackDialog.collectAsState()
     var showFeedbackSuccessDialog by remember { mutableStateOf(false) }
     var isRecording by remember { mutableStateOf(false) }
@@ -508,6 +510,16 @@ fun MainScreenContent(
                 ThanksDialog(
                     onDismiss = {}
                 )
+            }
+            if (isUiFrozen) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable(enabled = true) {} // Disable interaction
+                        .zIndex(9999f),
+                    contentAlignment = Alignment.Center
+                ) {
+                }
             }
         }
         if (isSheetVisible) {

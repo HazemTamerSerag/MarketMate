@@ -53,4 +53,6 @@
     <string name="can_t_recognize_this_product_please_try_again">Can\'t recognize this product, please try again.</string>
     <string name="error">Error</string>
     <string name="low_confidence_message">Unable to determine product quality with confidence. Please try again with better lighting and positioning.</string>
+    <string name="waiting_for_server_analysis_please_hold_the_camera_steady">Waiting for server analysis... Please hold the camera steady.</string>
+    <string name="point_camera_at_fruit_or_vegetable_and_hold_steady">Point camera at fruit or vegetable and hold steady.</string>
 </resources>

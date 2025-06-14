@@ -52,5 +52,8 @@
     <string name="camera_permission_is_required">مطلوب إذن الكاميرا!</string>
     <string name="camera_and_audio_permissions_required">مطلوب إذن الكاميرا والميكروفون</string>
     <string name="audio_permission_is_required">مطلوب إذن الميكروفون لتقديم التعليقات الصوتية</string>
+    <string name="can_t_recognize_this_product_please_try_again">لا يمكن التعرف على هذا المنتج، يرجى المحاولة مرة أخرى.</string>
+    <string name="waiting_for_server_analysis_please_hold_the_camera_steady">جارٍ تحليل الصورة على الخادم... يرجى تثبيت الكاميرا.</string>
+    <string name="point_camera_at_fruit_or_vegetable_and_hold_steady">وجّه الكاميرا نحو الفاكهة أو الخضار وثبّت يدك.</string>
 
 </resources>
